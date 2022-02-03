@@ -1,0 +1,12 @@
+pandas
+openpyxl
+scipy
+lizard
+metrixpp
+csvkit
+matplotlib
+seaborn
+sphinx
+sphinx-rtd-theme
+breathe
+sphinx-sitemap
