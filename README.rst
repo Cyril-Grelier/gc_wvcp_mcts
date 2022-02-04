@@ -9,7 +9,7 @@ This problem is an variant of the Graph Coloring Problem. Given a weighted graph
 
 This project is coded in C++ for the calculation part and in Python for the data analysis. This work is related to the article :
 
-TODO add article
+Grelier, C., Goudet, O., Hao, J.-K., 2022. On Monte Carlo Tree Search for Weighted Vertex Coloring. arXiv:2202.01665 [cs]. https://arxiv.org/abs/2202.01665
 
 
 Requirements
@@ -28,13 +28,13 @@ Clone the project
 
 .. code:: bash
 
-    git clone https://github.com/Cyril-Grelier/gc_wvcp_algo_gem_mem
+    git clone https://github.com/Cyril-Grelier/gc_wvcp_mcts
 
 Go to the project directory
 
 .. code:: bash
 
-    cd gc_wvcp_algo_gem_mem
+    cd gc_wvcp_mcts
 
 Load the instances
 
