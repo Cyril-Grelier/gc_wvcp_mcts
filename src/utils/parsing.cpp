@@ -29,7 +29,7 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
 
         options.allow_unrecognised_options().add_options()(
             "i,instance",
-            "name of the instance (located in instance/wvcp_reduced_graphs/)",
+            "name of the instance (located in instance/wvcp_reduced/)",
             cxxopts::value<std::string>()->default_value(Parameters::default_instance));
 
         options.allow_unrecognised_options().add_options()(
