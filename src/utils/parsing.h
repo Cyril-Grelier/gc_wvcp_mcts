@@ -20,6 +20,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv);
  * instances/wvcp_reduced/ directory
  *
  * @param instance_name : name of the instance (without the .col extension)
+ * @param wvcp_problem : true if wvcp problem, false if gcp problem
  * @return : shared ptr to the Graph
  */
-const std::unique_ptr<const Graph> load_graph(const std::string &instance_name);
+const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
+                                              const bool wvcp_problem);

@@ -4,14 +4,19 @@
 
 #include "representation/Parameters.h"
 
+void signal_handler(int signum) {
+    fmt::print(stderr, "\nInterrupt signal ({}) received.\n", signum);
+    Parameters::p->time_stop = std::chrono::high_resolution_clock::now();
+}
+
 int main(int argc, const char *argv[]) {
     // see top of file src/representation/Parameters.cpp for default parameters
     // Get the method
     auto method(parse(argc, argv));
 
     // Set the signal handler to stop the search
-    signal(SIGTERM, method->signal_handler);
-    signal(SIGINT, method->signal_handler);
+    signal(SIGTERM, signal_handler);
+    signal(SIGINT, signal_handler);
 
     // Start the search
     method->run();

@@ -31,11 +31,4 @@ class Method {
      * @return std::string method in csv format
      */
     [[nodiscard]] virtual const std::string line_csv() const = 0;
-
-    /**
-     * @brief Function called when a signal is raise to stop the search
-     *
-     * @param signum the signal
-     */
-    static void signal_handler(int signum);
 };

@@ -17,7 +17,7 @@ add_executable(${CMAKE_PROJECT_NAME}
         src/representation/Action.cpp src/representation/Action.h
         src/representation/enum_types.cpp src/representation/enum_types.h
         src/representation/Graph.cpp src/representation/Graph.h
-        src/representation/Method.cpp src/representation/Method.h
+        src/representation/Method.h
         src/representation/Node.cpp src/representation/Node.h
         src/representation/Parameters.cpp src/representation/Parameters.h
         src/representation/Solution.cpp src/representation/Solution.h

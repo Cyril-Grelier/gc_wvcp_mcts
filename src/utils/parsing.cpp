@@ -20,8 +20,7 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
     // analyse command line options
     try {
         // init cxxopts
-        cxxopts::Options options(argv[0],
-                                 "Program to launch : mcts, algo mem or local search\n");
+        cxxopts::Options options(argv[0], "Program to launch : mcts, local search\n");
 
         options.positional_help("[optional args]").show_positional_help();
 
@@ -36,6 +35,11 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "m,method",
             "method (mcts, local_search)",
             cxxopts::value<std::string>()->default_value(Parameters::default_method));
+
+        options.allow_unrecognised_options().add_options()(
+            "p,problem",
+            "problem (gcp, wvcp)",
+            cxxopts::value<std::string>()->default_value("gcp"));
 
         options.allow_unrecognised_options().add_options()(
             "t,time_limit",
@@ -54,12 +58,12 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
 
         options.allow_unrecognised_options().add_options()(
             "n,nb_max_iterations",
-            "number of iteration maximum of the mcts or algo mem",
+            "number of iteration maximum of the mcts",
             cxxopts::value<long>()->default_value(Parameters::default_nb_max_iterations));
 
         options.allow_unrecognised_options().add_options()(
             "I,initialization",
-            "Initialization for algo mem or local search",
+            "Initialization of the solutions",
             cxxopts::value<std::string>()->default_value(
                 Parameters::default_initialization_str));
 
@@ -84,8 +88,7 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
 
         options.allow_unrecognised_options().add_options()(
             "l,local_search",
-            "Local search for algo mem or local search (to give multiple separate with "
-            ":)",
+            "Local search selected",
             cxxopts::value<std::string>()->default_value(
                 Parameters::default_local_search_str));
 
@@ -143,8 +146,18 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
         const int rand_seed{result["rand_seed"].as<int>()};
         rd::generator.seed(rand_seed);
 
+        const std::string problem{result["problem"].as<std::string>()};
+        if (problem != "wvcp" and problem != "gcp") {
+            fmt::print(stderr,
+                       "unknown problem {}\n"
+                       "select : wvcp, gcp",
+                       problem);
+            exit(1);
+        }
+
         // init graph
-        Graph::init_graph(load_graph(result["instance"].as<std::string>()));
+        Graph::init_graph(
+            load_graph(result["instance"].as<std::string>(), problem == "wvcp"));
 
         const int max_time_local_search{
             result["max_time_local_search"].as<int>() == -1
@@ -155,7 +168,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
 
         // init parameters
         Parameters::init_parameters(
-            std::make_unique<Parameters>(result["method"].as<std::string>(),
+            std::make_unique<Parameters>(result["problem"].as<std::string>(),
+                                         result["method"].as<std::string>(),
                                          result["time_limit"].as<int>(),
                                          result["rand_seed"].as<int>(),
                                          result["target"].as<int>(),
@@ -203,18 +217,25 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
     }
 }
 
-const std::unique_ptr<const Graph> load_graph(const std::string &instance_name) {
+const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
+                                              const bool wvcp_problem) {
     // load the edges and vertices of the graph
-    std::ifstream file("../instances/wvcp_reduced/" + instance_name + ".col");
+    std::ifstream file;
+    if (wvcp_problem) {
+        file.open("../instances/wvcp_reduced/" + instance_name + ".col");
+    } else {
+        file.open("../instances/wvcp_original/" + instance_name + ".col");
+    }
     if (!file) {
         fmt::print(stderr,
-                   "Didn't find {} in ../instances/wvcp_reduced/\n"
+                   "Didn't find {} in ../instances/wvcp_reduced/ or wvcp_original (if "
+                   "problem == gcp)\n"
                    "Did you run \n\n"
                    "git submodule init\n"
                    "git submodule update\n\n"
-                   "before excecuting the program ?(import instances)\n"
+                   "before executing the program ?(import instances)\n"
                    "Otherwise check that you are in the build "
-                   "directory before excecuting the program\n",
+                   "directory before executing the program\n",
                    instance_name);
         exit(1);
     }
@@ -236,21 +257,24 @@ const std::unique_ptr<const Graph> load_graph(const std::string &instance_name) 
     }
     file.close();
 
-    // load the weights of the vertices
-    std::ifstream w_file("../instances/wvcp_reduced/" + instance_name + ".col.w");
-    if (!w_file) {
-        fmt::print(stderr,
-                   "Didn't find weights for {} in ../instances/wvcp_reduced/\n",
-                   instance_name);
-        exit(1);
+    std::vector<int> weights(nb_vertices, 1);
+
+    if (wvcp_problem) {
+        // load the weights of the vertices
+        std::ifstream w_file("../instances/wvcp_reduced/" + instance_name + ".col.w");
+        if (!w_file) {
+            fmt::print(stderr,
+                       "Didn't find weights for {} in ../instances/wvcp_reduced/\n",
+                       instance_name);
+            exit(1);
+        }
+        size_t i(0);
+        while (!w_file.eof()) {
+            w_file >> weights[i];
+            ++i;
+        }
+        w_file.close();
     }
-    std::vector<int> weights(nb_vertices, 0);
-    size_t i(0);
-    while (!w_file.eof()) {
-        w_file >> weights[i];
-        ++i;
-    }
-    w_file.close();
 
     std::vector<std::vector<bool>> adjacency_matrix(
         nb_vertices, std::vector<bool>(nb_vertices, false));

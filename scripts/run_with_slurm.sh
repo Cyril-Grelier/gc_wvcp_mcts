@@ -21,8 +21,6 @@ split -l 1000 -d to_eval to_eval
 attention au nombre de lignes dans to_eval !!!!
 modifier dans one_job_slurm #SBATCH --array=1-1000 (1 et 1000 inclus)
 
-sbatch scripts/one_job_slurm_algo_mem.sh to_eval
-
 sbatch scripts/one_job_slurm.sh to_eval
 
 # 4 : check for problems

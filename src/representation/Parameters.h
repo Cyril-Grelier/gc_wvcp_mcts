@@ -55,7 +55,7 @@ struct Parameters {
     /** @brief Number of iteration maximum for the MCTS*/
     const long nb_max_iterations;
 
-    /** @brief Type of initialization for local search/algo mem*/
+    /** @brief Type of initialization of the solutions*/
     const Initialization initialization;
 
     /** @brief Number of iteration for the local search*/
@@ -100,7 +100,8 @@ struct Parameters {
     /**
      * @brief Construct Parameters
      */
-    explicit Parameters(const std::string &method,
+    explicit Parameters(const std::string &problem,
+                        const std::string &method,
                         const int &time_limit_,
                         const int &rand_seed_,
                         const int &target_,

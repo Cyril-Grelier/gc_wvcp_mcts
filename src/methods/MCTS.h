@@ -19,7 +19,7 @@ class MCTS : public Method {
     std::shared_ptr<Node> _root_node;
     /** @brief Current node*/
     std::shared_ptr<Node> _current_node;
-    /** @brief Solution at the begining of the tree (will be copied at each turn)*/
+    /** @brief Solution at the beginning of the tree (will be copied at each turn)*/
     Solution _base_solution;
     /** @brief Best found solution*/
     Solution _best_solution;

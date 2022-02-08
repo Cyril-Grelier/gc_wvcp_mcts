@@ -3,13 +3,13 @@
 #include <cstdio>
 
 // to choose instance
-const std::string Parameters::default_instance{"queen10_10"};
+const std::string Parameters::default_instance{"zeroin.i.3"};
 
 // to choose local_search or mcts
 const std::string Parameters::default_method{
     //
-    "mcts"
-    // "local_search"
+    // "mcts"
+    "local_search"
     //
 };
 
@@ -60,17 +60,17 @@ const std::string Parameters::default_max_time_local_search{
     //
 };
 
-// for local_search, mcts and memetic
+// for local_search and mcts
 const std::string Parameters::default_local_search_str{
     //
-    "none"
+    // "none"
     // "hill_climbing"
     // "tabu_weight"
     // "tabu_col"
     // "afisa"
     // "afisa_original"
     // "redls"
-    // "ilsts"
+    "ilsts"
     // "ilsts:redls:afisa"
     //
 };
@@ -95,7 +95,8 @@ void Parameters::init_parameters(std::unique_ptr<Parameters> parameters_) {
     Parameters::p = std::move(parameters_);
 }
 
-Parameters::Parameters(const std::string &method,
+Parameters::Parameters(const std::string &problem,
+                       const std::string &method,
                        const int &time_limit_,
                        const int &rand_seed_,
                        const int &target_,
@@ -122,9 +123,10 @@ Parameters::Parameters(const std::string &method,
       local_search_str(local_search_str_),
       simulation_str(simulation_str_) {
     if (method == "local_search") {
-        header_csv = "time_limit,rand_seed,target,initialization,"
+        header_csv = "problem,time_limit,rand_seed,target,initialization,"
                      "nb_iter_local_search,max_time_local_search";
-        line_csv = fmt::format("{},{},{},{},{},{}",
+        line_csv = fmt::format("{},{},{},{},{},{},{}",
+                               problem,
                                time_limit,
                                rand_seed,
                                target,
@@ -132,10 +134,11 @@ Parameters::Parameters(const std::string &method,
                                nb_iter_local_search,
                                max_time_local_search);
     } else if (method == "mcts") {
-        header_csv = "time_limit,rand_seed,target,nb_max_iterations,"
+        header_csv = "problem,time_limit,rand_seed,target,nb_max_iterations,"
                      "nb_iter_local_search,max_time_local_search,initialization,"
                      "simulation,coeff_exploi_explo,local_search";
-        line_csv = fmt::format("{},{},{},{},{},{},{},{},{},{}",
+        line_csv = fmt::format("{},{},{},{},{},{},{},{},{},{},{}",
+                               problem,
                                time_limit,
                                rand_seed,
                                target,
