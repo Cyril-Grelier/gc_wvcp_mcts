@@ -5,6 +5,7 @@ to split :
     split -l 1000 -d to_eval_ls to_eval_ls
 
 instance                  // i,instance
+problem                   // p,problem
 method                    // m,method
 time_limit                // t,time_limit
 rand_seed                 // r,rand_seed
@@ -34,6 +35,7 @@ def get_target(instance: str):
 with open("all_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
+problem = "gcp" # "wvcp" "gcp" # p, problem
 method = "local_search"  # m,method
 
 time_limit = 3600  # t,time_limit
@@ -62,7 +64,7 @@ local_searchs = [
     "ilsts",
 ]  # l,local_search
 
-output_directory = "output_ls"
+output_directory = "output_ls_gcp"
 
 os.mkdir(f"{output_directory}/")
 for local_search in local_searchs:
@@ -77,6 +79,7 @@ with open("to_eval_ls", "w", encoding="UTF8") as file:
                 for rand_seed in rand_seeds:
                     file.write(
                         f"./gc_wvcp "
+                        f" -p {problem}"
                         f" -i {instance}"
                         f" -m {method}"
                         f" -t {time_limit}"
