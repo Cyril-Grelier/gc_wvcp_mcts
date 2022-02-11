@@ -36,32 +36,32 @@ def main():
         # "tabu_col",
         # "hill_climbing",
         # "afisa_original",
-        "afisa",
-        "tabu_weight",
-        "redls",
-        "ilsts",
-        # "random",
-        # "constrained",
-        # "deterministic",
+        # "afisa",
+        # "tabu_weight",
+        # "redls",
+        # "ilsts",
+        "random",
+        "constrained",
+        "deterministic",
     ]
     methods = []
     for ls in lss:
         methods.append(
             Method(
                 f"{ls}",
-                f"outputs/output_local_search/{ls}/",
+                f"outputs/output_greedy/{ls}/",
                 f"{ls}",
             )
         )
         methods.append(
             Method(
                 f"mcts_{ls}",
-                f"outputs/output_mcts_local_search/{ls}/",
+                f"outputs/output_mcts_greedy/{ls}/",
                 f"mcts_{ls}",
             )
         )
 
-    output_file = "xlsx_files/mcts_local_search.xlsx"
+    output_file = "xlsx_files/greedy_vs_mcts_greedy.xlsx"
 
     # Choose the method to compare with ttest (just need the method name and short name)
     gaps = [
@@ -270,7 +270,7 @@ def get_best_known_score(instance: str) -> Tuple[int, bool]:
             instance_, score, optimal = line[:-1].split(" ")
             if instance_ == instance:
                 return score, optimal == "*"
-    raise Exception(f"instance {instance} not found in instances/instance_info.txt")
+    raise Exception(f"instance {instance} not found in instances/best_scores_wvcp.txt")
 
 
 def load_instance(instance: str, methods: List[Method]) -> Instance:

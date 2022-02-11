@@ -35,7 +35,7 @@ def get_target(instance: str):
 with open("all_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
-problem = "gcp" # "wvcp" "gcp" # p, problem
+problem = "wvcp" # "wvcp" "gcp" # p, problem
 method = "local_search"  # m,method
 
 time_limit = 3600  # t,time_limit
@@ -49,27 +49,28 @@ nb_iter_local_search = 9000000000000000000  # N,nb_iter_local_search
 max_time_local_search = time_limit  # M,max_time_local_search
 
 initializations = [
-    # "random",
-    # "constrained",
+    "random",
+    "constrained",
     "deterministic"
 ]  # I,initialization
 
 local_searchs = [
+    "none",
     # "hill_climbing",
     # "tabu_weight",
     # "tabu_col",
     # "afisa",
     # "afisa_original",
     # "redls",
-    "ilsts",
+    # "ilsts",
 ]  # l,local_search
 
-output_directory = "output_ls_gcp"
+output_directory = "output_greedy"
 
 os.mkdir(f"{output_directory}/")
 for local_search in local_searchs:
     for initialization in initializations:
-        os.mkdir(f"{output_directory}/{local_search}")
+        os.mkdir(f"{output_directory}/{initialization}")
 
 with open("to_eval_ls", "w", encoding="UTF8") as file:
     for local_search in local_searchs:
@@ -89,6 +90,6 @@ with open("to_eval_ls", "w", encoding="UTF8") as file:
                         f" -N {nb_iter_local_search}"
                         f" -M {max_time_local_search}"
                         f" -l {local_search}"
-                        f" -o ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
+                        f" -o ../{output_directory}/{initialization}/{instance}_{rand_seed}.csv"
                         "\n"
                     )
