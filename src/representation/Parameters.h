@@ -12,34 +12,8 @@
  */
 struct Parameters {
 
-    /** @brief The parameters of the search*/
+    /** @brief The parameters of the search, refer as Parameters::p*/
     static std::unique_ptr<Parameters> p;
-
-    // default values for parameters (edit in Parameters.cpp)
-    /** @brief Default parameter for instance*/
-    const static std::string default_instance; // i,instance
-    /** @brief Default parameter for method*/
-    const static std::string default_method; // m,method
-    /** @brief Default parameter for time_limit*/
-    const static std::string default_time_limit; // t,time_limit
-    /** @brief Default parameter for rand_seed*/
-    const static std::string default_rand_seed; // r,rand_seed
-    /** @brief Default parameter for target*/
-    const static std::string default_target; // T,target
-    /** @brief Default parameter for nb_max_iterations*/
-    const static std::string default_nb_max_iterations; // n,nb_max_iterations
-    /** @brief Default parameter for initialization_str*/
-    const static std::string default_initialization_str; // I,initialization
-    /** @brief Default parameter for nb_iter_local_search*/
-    const static std::string default_nb_iter_local_search; // N,nb_iter_local_search
-    /** @brief Default parameter for max_time_local_search*/
-    const static std::string default_max_time_local_search; // M,max_time_local_search
-    /** @brief Default parameter for coeff_exploi_explo*/
-    const static std::string default_coeff_exploi_explo; // c,coeff_exploi_explo
-    /** @brief Default parameter for local_search_str*/
-    const static std::string default_local_search_str; // l,local_search
-    /** @brief Default parameter for simulation_str*/
-    const static std::string default_simulation_str; // s,simulation
 
     /** @brief Time of the beginning of the search*/
     const std::chrono::high_resolution_clock::time_point time_start;
@@ -117,7 +91,7 @@ struct Parameters {
      * @brief Close output file if needed
      *
      */
-    void end_search();
+    void end_search() const;
 
     /**
      * @brief Return true if the time limit is reached
@@ -125,7 +99,7 @@ struct Parameters {
      * @return true Time limit is reached
      * @return false The search continue
      */
-    bool time_limit_reached();
+    bool time_limit_reached() const;
 
     /**
      * @brief Return true if the time limit is reached according to the given time
@@ -133,7 +107,8 @@ struct Parameters {
      * @return true Time limit is reached
      * @return false The search continue
      */
-    bool time_limit_reached(const std::chrono::high_resolution_clock::time_point &time);
+    bool time_limit_reached_sub_method(
+        const std::chrono::high_resolution_clock::time_point &time) const;
 
     /**
      * @brief Returns the number of seconds between the given time and the start of
@@ -142,5 +117,6 @@ struct Parameters {
      * @param time given time (std::chrono::high_resolution_clock::now())
      * @return int64_t elapsed time in seconds
      */
-    int64_t elapsed_time(const std::chrono::high_resolution_clock::time_point &time);
+    int64_t
+    elapsed_time(const std::chrono::high_resolution_clock::time_point &time) const;
 };

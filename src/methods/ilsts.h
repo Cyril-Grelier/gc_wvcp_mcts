@@ -21,10 +21,11 @@ void ilsts(Solution &solution, const bool verbose = false);
  *
  * @param solution solution
  * @param iter number of iterations for tabu list
+ * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_1_2_3(Solution &solution, const long iter);
+bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu);
 
 /**
  * @brief Step 3 of ILSTS algorithm
@@ -34,14 +35,16 @@ bool M_1_2_3(Solution &solution, const long iter);
  * @param min_cost minimal cost to do a grenade operator
  * @param min_vertex vertex to move
  * @param min_c color to use for the vertex
+ * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
 bool M_3(Solution &solution,
          const long iter,
          const int min_cost,
-         const int min_vertex,
-         const int min_c);
+         const int vertex,
+         const int min_c,
+         std::vector<long> &tabu);
 
 /**
  * @brief Step 4 of ILSTS algorithm
@@ -49,10 +52,14 @@ bool M_3(Solution &solution,
  * @param solution solution
  * @param iter number of iterations for tabu list
  * @param free_vertices shuffled free vertices
+ * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_4(Solution &solution, const long iter, const std::vector<int> &free_vertices);
+bool M_4(Solution &solution,
+         const long iter,
+         const std::vector<int> &free_vertices,
+         std::vector<long> &tabu);
 
 /**
  * @brief Step 5 of ILSTS algorithm
@@ -60,17 +67,22 @@ bool M_4(Solution &solution, const long iter, const std::vector<int> &free_verti
  * @param solution solution
  * @param iter number of iterations for tabu list
  * @param free_vertices shuffled free vertices
+ * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_5(Solution &solution, const long iter, const std::vector<int> &free_vertices);
+bool M_5(Solution &solution,
+         const long iter,
+         const std::vector<int> &free_vertices,
+         std::vector<long> &tabu);
 
 /**
  * @brief Step 6 of ILSTS algorithm
  *
  * @param solution solution
  * @param iter number of iterations for tabu list
+ * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_6(Solution &solution, const long iter);
+bool M_6(Solution &solution, const long iter, std::vector<long> &tabu);

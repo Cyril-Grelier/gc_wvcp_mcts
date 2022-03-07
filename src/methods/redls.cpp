@@ -18,8 +18,7 @@ void redls(Solution &best_solution, const bool verbose) {
     solution.reset_tabu();
     solution.reset_edge_weights();
     long turn{0};
-    while (not Parameters::p->time_limit_reached() and
-           not Parameters::p->time_limit_reached(max_time) and
+    while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn < Parameters::p->nb_iter_local_search and
            best_solution.score() != Parameters::p->target) {
         ++turn;
@@ -29,9 +28,9 @@ void redls(Solution &best_solution, const bool verbose) {
             while (continueCanSet2) {
                 const auto best_actions = get_moves_CanSet2(solution, false);
                 if (not best_actions.empty()) {
-                    const Action choosen_one{rd::get_random_value(best_actions)};
-                    solution.delete_vertex_from_color(choosen_one.vertex);
-                    solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
+                    const Action chosen_one{rd::get_random_value(best_actions)};
+                    solution.delete_vertex_from_color(chosen_one.vertex);
+                    solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
                 } else {
                     continueCanSet2 = false;
                 }
@@ -97,10 +96,10 @@ void redls(Solution &best_solution, const bool verbose) {
             while (continueCanSet2) {
                 const auto best_moves_canSet2 = get_moves_CanSet2(solution, true);
                 if (not best_moves_canSet2.empty()) {
-                    const auto choosen_one{rd::get_random_value(best_moves_canSet2)};
-                    solution.delete_vertex_from_color(choosen_one.vertex);
-                    solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
-                    solution.tabu[choosen_one.vertex] = 1;
+                    const auto chosen_one{rd::get_random_value(best_moves_canSet2)};
+                    solution.delete_vertex_from_color(chosen_one.vertex);
+                    solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
+                    solution.tabu[chosen_one.vertex] = 1;
                 } else {
                     continueCanSet2 = false;
                 }
@@ -108,18 +107,18 @@ void redls(Solution &best_solution, const bool verbose) {
             const auto best_moves_canSet3 =
                 get_moves_CanSet3(solution, best_solution.score());
             if (not best_moves_canSet3.empty()) {
-                const Action choosen_one{rd::get_random_value(best_moves_canSet3)};
-                solution.delete_vertex_from_color(choosen_one.vertex);
-                solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
-                solution.tabu[choosen_one.vertex] = 1;
+                const Action chosen_one{rd::get_random_value(best_moves_canSet3)};
+                solution.delete_vertex_from_color(chosen_one.vertex);
+                solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
+                solution.tabu[chosen_one.vertex] = 1;
             } else {
                 // Increments edge weight
                 solution.increment_edge_weights();
                 if (not solution.conflict_edges().empty()) {
-                    Action choosen_one = selectionRule2(solution, best_solution.score());
-                    solution.delete_vertex_from_color(choosen_one.vertex);
-                    solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
-                    solution.tabu[choosen_one.vertex] = 1;
+                    Action chosen_one = selectionRule2(solution, best_solution.score());
+                    solution.delete_vertex_from_color(chosen_one.vertex);
+                    solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
+                    solution.tabu[chosen_one.vertex] = 1;
                 }
             }
         }
@@ -141,7 +140,7 @@ std::vector<Action> get_moves_CanSet1(Solution &solution, const int best_local_s
     std::vector<Action> canSet1;
     int max_score_S = std::max(solution.score(), best_local_score);
     for (const auto &vertex : solution.free_vertices()) {
-        if (solution.conflicts_colors(solution.color(vertex), vertex) > 0 &&
+        if (solution.conflicts_colors(solution.color(vertex), vertex) > 0 and
             solution.tabu[vertex] == 0) {
             for (const auto &color : solution.non_empty_colors()) {
                 if (color != solution.color(vertex)) {

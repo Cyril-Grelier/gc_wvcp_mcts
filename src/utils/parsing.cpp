@@ -27,76 +27,123 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
         options.allow_unrecognised_options().add_options()("h,help", "Print usage");
 
         options.allow_unrecognised_options().add_options()(
+            "p,problem",
+            "problem (gcp, wvcp)",
+            cxxopts::value<std::string>()->default_value("wvcp"));
+
+        options.allow_unrecognised_options().add_options()(
             "i,instance",
             "name of the instance (located in instance/wvcp_reduced/)",
-            cxxopts::value<std::string>()->default_value(Parameters::default_instance));
+            cxxopts::value<std::string>()->default_value(
+                //
+                // "p42"
+                "queen10_10"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "m,method",
             "method (mcts, local_search)",
-            cxxopts::value<std::string>()->default_value(Parameters::default_method));
-
-        options.allow_unrecognised_options().add_options()(
-            "p,problem",
-            "problem (gcp, wvcp)",
-            cxxopts::value<std::string>()->default_value("gcp"));
-
-        options.allow_unrecognised_options().add_options()(
-            "t,time_limit",
-            "maximum execution time in seconds",
-            cxxopts::value<int>()->default_value(Parameters::default_time_limit));
+            cxxopts::value<std::string>()->default_value(
+                //
+                // "mcts"
+                "local_search"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "r,rand_seed",
             "random seed",
-            cxxopts::value<int>()->default_value(Parameters::default_rand_seed));
+            cxxopts::value<int>()->default_value(
+                //
+                // "1"
+                std::to_string(time(nullptr))
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "T,target",
             "if the target score is reach, the search is stopped",
-            cxxopts::value<int>()->default_value(Parameters::default_target));
+            cxxopts::value<int>()->default_value("0"));
+
+        const std::string time_limit{"3600"};
+        options.allow_unrecognised_options().add_options()(
+            "t,time_limit",
+            "maximum execution time in seconds",
+            cxxopts::value<int>()->default_value(time_limit));
 
         options.allow_unrecognised_options().add_options()(
             "n,nb_max_iterations",
-            "number of iteration maximum of the mcts",
-            cxxopts::value<long>()->default_value(Parameters::default_nb_max_iterations));
+            "number of iteration maximum for the mcts",
+            cxxopts::value<long>()->default_value(
+                std::to_string(std::numeric_limits<long>::max())));
 
         options.allow_unrecognised_options().add_options()(
             "I,initialization",
-            "Initialization of the solutions",
+            "Initialization of the solutions (random, constrained, deterministic)",
             cxxopts::value<std::string>()->default_value(
-                Parameters::default_initialization_str));
+                //
+                // "random"
+                // "constrained"
+                "deterministic"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "N,nb_iter_local_search",
             "Number max of iteration for local search when call from another method or "
-            "not",
+            "not, can be override by max_time_local_search or o and t time",
             cxxopts::value<long>()->default_value(
-                Parameters::default_nb_iter_local_search));
+                //
+                std::to_string(std::numeric_limits<long>::max())
+                // "500"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "M,max_time_local_search",
-            "Time limit in seconds for local search when call from another method or not",
+            "Time limit in seconds for local search when call from another method or not "
+            "can by override by nb_iter_local_search or o and t time",
             cxxopts::value<int>()->default_value(
-                Parameters::default_max_time_local_search));
+                //
+                time_limit
+                // "-1"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "c,coeff_exploi_explo",
             "Coefficient exploration vs exploitation for MCTS",
-            cxxopts::value<double>()->default_value(
-                Parameters::default_coeff_exploi_explo));
+            cxxopts::value<double>()->default_value("1"));
 
         options.allow_unrecognised_options().add_options()(
             "l,local_search",
             "Local search selected",
             cxxopts::value<std::string>()->default_value(
-                Parameters::default_local_search_str));
+                //
+                // "none"
+                // "hill_climbing"
+                // "tabu_weight"
+                // "tabu_col"
+                // "afisa"
+                // "afisa_original"
+                "redls"
+                // "ilsts"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "s,simulation",
             "Simulation for MCTS",
             cxxopts::value<std::string>()->default_value(
-                Parameters::default_simulation_str));
+                //
+                "greedy"
+                // "local_search"
+                // "fit"
+                // "depth"
+                // "depth_fit"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "O,O_time",

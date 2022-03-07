@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 
 #include "Action.h"
 #include "Graph.h"
 #include "Parameters.h"
-#include <tuple>
 
 /**
  * @brief Representation of a solution for Weighted Vertex Coloring Problem

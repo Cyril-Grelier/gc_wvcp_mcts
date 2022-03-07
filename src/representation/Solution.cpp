@@ -76,11 +76,11 @@ bool Solution::unassigned_random_heavy_vertices(const int force,
         const int color{rd::get_random_value(possible_colors)};
         // const int color{rd::get_random_value(_non_empty_colors)};
 
-        const int max_weight = _colors_weights[color].back();
+        const int old_max_weight = max_weight(color);
 
         std::vector<int> to_unassign;
         for (const auto &vertex : _colors_vertices[color]) {
-            if (Graph::g->weights[vertex] == max_weight) {
+            if (Graph::g->weights[vertex] == old_max_weight) {
                 to_unassign.push_back(vertex);
             }
         }
@@ -148,8 +148,7 @@ int Solution::add_vertex_to_color(const int vertex, const int color_proposed) {
                         ? add_new_color()
                         : color_proposed};
 
-    const int old_max_weight =
-        _colors_weights[color].empty() ? 0 : _colors_weights[color].back();
+    const int old_max_weight = max_weight(color);
 
     // Added for RedLS - update nb of conflicts and list of conflicting edges
     if (_conflicts_colors[color][vertex] > 0) {
@@ -261,7 +260,7 @@ int Solution::delete_vertex_from_color(const int vertex) {
         _conflicts_colors[color][neighbor] -= _edge_weights[vertex][neighbor];
 
         if (_conflicts_colors[color][neighbor] == 0 and
-            Graph::g->weights[neighbor] <= _colors_weights[color].back()) {
+            Graph::g->weights[neighbor] <= max_weight(color)) {
             ++_nb_free_colors[neighbor];
         }
     }
@@ -281,14 +280,13 @@ int Solution::delete_vertex_from_color(const int vertex) {
     _position[color][vertex2] = pos_v;
     // change the boundary between the blocks to make v the first vertex of the
     // second partition
-    const int old_weight{_colors_weights[color].back()};
+    const int old_weight{max_weight(color)};
     const int vertex_weight{Graph::g->weights[vertex]};
 
     _score += get_delta_old_color(vertex);
     erase_sorted(_colors_weights[color], vertex_weight);
     erase_sorted(_colors_vertices[color], vertex);
-    const int max_weight_color =
-        _colors_weights[color].empty() ? 0 : _colors_weights[color].back();
+    const int max_weight_color = max_weight(color);
     // update free colors
     if (vertex_weight == old_weight) {
         for (int i = static_cast<int>(_colors_weights[color].size());
@@ -369,8 +367,7 @@ bool Solution::random_assignment_constrained(const int vertex) {
     for (int i = 0; i < _nb_colors; ++i) {
         if (_conflicts_colors[color][vertex] == 0 and
             not _colors_weights[color].empty() and
-            _colors_weights[color].back() >= Graph::g->weights[vertex] and
-            color != _colors[vertex]) {
+            max_weight(color) >= Graph::g->weights[vertex] and color != _colors[vertex]) {
             if (_colors[vertex] != -1) {
                 delete_vertex_from_color(vertex);
             }
@@ -448,7 +445,7 @@ bool Solution::check_solution() const {
         for (int col = 0; col < _nb_colors; ++col) {
             if (_conflicts_colors[col][vertex] == 0 and col != color and
                 not _colors_weights[col].empty() and
-                Graph::g->weights[vertex] <= _colors_weights[col].back())
+                Graph::g->weights[vertex] <= max_weight(col))
                 ++free;
         }
         assert(_nb_free_colors[vertex] == free);
@@ -458,7 +455,7 @@ bool Solution::check_solution() const {
         if (_colors_weights[color].empty())
             continue;
 
-        assert(_colors_weights[color].back() == max_colors_weights[color]);
+        assert(max_weight(color) == max_colors_weights[color]);
         score += max_colors_weights[color];
 
         for (int vertex = 0; vertex < Graph::g->nb_vertices; ++vertex) {
@@ -508,7 +505,7 @@ bool Solution::check_solution() const {
 }
 
 void Solution::reset_tabu() {
-    tabu = std::vector<long>(Graph::g->nb_vertices);
+    tabu = std::vector<long>(Graph::g->nb_vertices, 0);
 }
 
 void Solution::reset_edge_weights() {
@@ -544,11 +541,12 @@ int Solution::get_delta_score(const int vertex, const int color) const {
         _colors_weights[color].empty()) {
         return vertex_weight + diff;
     }
+    const int old_max_weight{max_weight(color)};
     // if the vertex is heavier than the heaviest of the new color class
-    if (vertex_weight > _colors_weights[color].back()) {
+    if (vertex_weight > old_max_weight) {
         // the delta is the difference between the vertex weight and the heavier
         // vertex
-        return vertex_weight - _colors_weights[color].back() + diff;
+        return vertex_weight - old_max_weight + diff;
     }
     return diff;
 }
@@ -561,7 +559,7 @@ int Solution::get_delta_score(const int vertex, const int color) const {
         return -vertex_weight;
     }
     // if the vertex is the heaviest one and the second heaviest is lighter
-    if (vertex_weight == _colors_weights[color].back() and
+    if (vertex_weight == max_weight(color) and
         _colors_weights[color].end()[-2] < vertex_weight) {
         return _colors_weights[color].end()[-2] - vertex_weight;
     }
@@ -690,6 +688,9 @@ Solution::nb_vertices_per_color(const int nb_colors_max) const {
 }
 
 [[nodiscard]] int Solution::max_weight(const int &color) const {
+    if (color == -1 or color >= _nb_colors or _colors_weights[color].empty()) {
+        return 0;
+    }
     return _colors_weights[color].back();
 }
 

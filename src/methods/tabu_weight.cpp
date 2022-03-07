@@ -18,8 +18,7 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
     Solution solution = best_solution;
     solution.reset_tabu();
     long turn{0};
-    while (not Parameters::p->time_limit_reached() and
-           not Parameters::p->time_limit_reached(max_time) and
+    while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn < Parameters::p->nb_iter_local_search and
            best_solution.score() != Parameters::p->target) {
         ++turn;
@@ -47,10 +46,10 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
             }
         }
         if (not best_actions.empty()) {
-            const Action choosen_one{rd::get_random_value(best_actions)};
-            solution.delete_vertex_from_color(choosen_one.vertex);
-            solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
-            solution.tabu[choosen_one.vertex] = turn + solution.nb_non_empty_colors();
+            const Action chosen_one{rd::get_random_value(best_actions)};
+            solution.delete_vertex_from_color(chosen_one.vertex);
+            solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
+            solution.tabu[chosen_one.vertex] = turn + solution.nb_non_empty_colors();
             if (solution.score() < best_solution.score()) {
                 best_solution = solution;
                 if (verbose) {

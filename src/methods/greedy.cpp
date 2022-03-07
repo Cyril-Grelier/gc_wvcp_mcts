@@ -40,3 +40,16 @@ void greedy_constrained(Solution &solution) {
         }
     }
 }
+
+init_ptr get_initialization_fct(const Initialization &initialization) {
+    switch (initialization) {
+    case Initialization::random:
+        return greedy_random;
+    case Initialization::constrained:
+        return greedy_constrained;
+    case Initialization::deterministic:
+        return greedy_deterministic;
+    default:
+        return nullptr;
+    }
+}

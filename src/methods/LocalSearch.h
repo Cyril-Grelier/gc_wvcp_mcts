@@ -3,9 +3,8 @@
 #include "../representation/Method.h"
 #include "../representation/Solution.h"
 #include "../representation/enum_types.h"
+#include "greedy.h"
 
-/** @brief Pointer to initialization function*/
-typedef void (*init_ptr)(Solution &solution);
 /** @brief Pointer to local search function*/
 typedef void (*local_search_ptr)(Solution &, const bool);
 
@@ -47,14 +46,6 @@ class LocalSearch : public Method {
      */
     [[nodiscard]] const std::string line_csv() const override;
 };
-
-/**
- * @brief Get the initialization
- *
- * @param initialization
- * @return init_ptr function greedy
- */
-init_ptr get_initialization_fct(const Initialization &initialization);
 
 /**
  * @brief Get the local search

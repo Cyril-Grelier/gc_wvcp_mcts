@@ -3,7 +3,6 @@
 #include "../utils/utils.h"
 #include "afisa.h"
 #include "afisa_original.h"
-#include "greedy.h"
 #include "hill_climbing.h"
 #include "ilsts.h"
 #include "redls.h"
@@ -41,19 +40,6 @@ void LocalSearch::run() {
         0, // turn,
         Parameters::p->elapsed_time(std::chrono::high_resolution_clock::now()),
         _best_solution.line_csv());
-}
-
-init_ptr get_initialization_fct(const Initialization &initialization) {
-    switch (initialization) {
-    case Initialization::random:
-        return greedy_random;
-    case Initialization::constrained:
-        return greedy_constrained;
-    case Initialization::deterministic:
-        return greedy_deterministic;
-    default:
-        return nullptr;
-    }
 }
 
 local_search_ptr get_local_search_fct(const Local_search &local_search) {

@@ -2,6 +2,9 @@
 
 #include "../representation/Solution.h"
 
+/** @brief Pointer to initialization function*/
+typedef void (*init_ptr)(Solution &solution);
+
 /**
  * @brief Greedy algorithm, that color vertices in the free_vertice order
  * and giving possibility to add a new color any time
@@ -26,3 +29,11 @@ void greedy_deterministic(Solution &solution);
  * @param solution solution to use, the solution will be modified
  */
 void greedy_constrained(Solution &solution);
+
+/**
+ * @brief Get the initialization
+ *
+ * @param initialization
+ * @return init_ptr function greedy
+ */
+init_ptr get_initialization_fct(const Initialization &initialization);

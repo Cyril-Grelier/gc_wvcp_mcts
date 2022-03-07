@@ -31,9 +31,9 @@ void hill_climbing_one_move(Solution &solution, const bool verbose) {
         if (best_actions.empty()) {
             return;
         }
-        const Action choosen_one{rd::get_random_value(best_actions)};
-        solution.delete_vertex_from_color(choosen_one.vertex);
-        solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
+        const Action chosen_one{rd::get_random_value(best_actions)};
+        solution.delete_vertex_from_color(chosen_one.vertex);
+        solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
         if (verbose) {
             best_time =
                 Parameters::p->elapsed_time(std::chrono::high_resolution_clock::now());
@@ -47,16 +47,5 @@ void hill_climbing_one_move(Solution &solution, const bool verbose) {
                        best_time,
                        solution.line_csv());
         }
-    }
-    if (verbose) {
-        fmt::print(Parameters::p->output,
-                   "{},{},{},{},{},{},{}\n",
-                   get_date_str(),
-                   Parameters::p->local_search_str,
-                   Graph::g->name,
-                   Parameters::p->line_csv,
-                   turn,
-                   best_time,
-                   solution.line_csv());
     }
 }

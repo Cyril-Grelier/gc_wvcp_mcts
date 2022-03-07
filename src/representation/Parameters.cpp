@@ -2,93 +2,6 @@
 
 #include <cstdio>
 
-// to choose instance
-const std::string Parameters::default_instance{"zeroin.i.3"};
-
-// to choose local_search or mcts
-const std::string Parameters::default_method{
-    //
-    // "mcts"
-    "local_search"
-    //
-};
-
-// for local_search or mcts
-const std::string Parameters::default_time_limit{"3600"};
-
-// for local_search or mcts
-const std::string Parameters::default_rand_seed{
-    //
-    // "1"
-    std::to_string(time(nullptr))
-    //
-};
-
-// for local_search and mcts (search stop when reached)
-const std::string Parameters::default_target{"0"};
-
-// for mcts
-const std::string Parameters::default_nb_max_iterations{
-    std::to_string(std::numeric_limits<long>::max())};
-
-// for local_search and mcts
-const std::string Parameters::default_initialization_str{
-    //
-    // "random"
-    // "constrained"
-    "deterministic"
-    //
-};
-
-// for local_search (set to numeric_limits<long>::max) and mcts
-// can be override by default_max_time_local_search
-const std::string Parameters::default_nb_iter_local_search{
-    //
-    // std::to_string(std::numeric_limits<long>::max())
-    "500"
-    //
-};
-
-// for local_search (set to time limit) and mcts
-// (see O and T in src/utils/parsing.cpp when set to -1)
-// can be override by default_nb_iter_local_search
-const std::string Parameters::default_max_time_local_search{
-    //
-    // Parameters::default_time_limit
-    // "-1"
-    "3600"
-    //
-};
-
-// for local_search and mcts
-const std::string Parameters::default_local_search_str{
-    //
-    // "none"
-    // "hill_climbing"
-    // "tabu_weight"
-    // "tabu_col"
-    // "afisa"
-    // "afisa_original"
-    // "redls"
-    "ilsts"
-    // "ilsts:redls:afisa"
-    //
-};
-
-// for mcts
-const std::string Parameters::default_coeff_exploi_explo{"1"};
-
-// for mcts
-const std::string Parameters::default_simulation_str{
-    //
-    "greedy"
-    // "local_search"
-    // "fit"
-    // "depth"
-    // "depth_fit"
-    //
-};
-
 std::unique_ptr<Parameters> Parameters::p = nullptr;
 
 void Parameters::init_parameters(std::unique_ptr<Parameters> parameters_) {
@@ -134,9 +47,10 @@ Parameters::Parameters(const std::string &problem,
                                nb_iter_local_search,
                                max_time_local_search);
     } else if (method == "mcts") {
-        header_csv = "problem,time_limit,rand_seed,target,nb_max_iterations,"
-                     "nb_iter_local_search,max_time_local_search,initialization,"
-                     "simulation,coeff_exploi_explo,local_search";
+        header_csv = "problem,time_limit,rand_seed,"
+                     "target,nb_max_iterations,nb_iter_local_search,"
+                     "max_time_local_search,initialization,simulation,"
+                     "coeff_exploi_explo,local_search";
         line_csv = fmt::format("{},{},{},{},{},{},{},{},{},{},{}",
                                problem,
                                time_limit,
@@ -157,7 +71,7 @@ Parameters::Parameters(const std::string &problem,
     }
 }
 
-void Parameters::end_search() {
+void Parameters::end_search() const {
     if (output != stdout) {
         std::fflush(output);
         std::fclose(output);
@@ -169,20 +83,23 @@ void Parameters::end_search() {
     }
 }
 
-bool Parameters::time_limit_reached() {
+bool Parameters::time_limit_reached() const {
     return not(std::chrono::duration_cast<std::chrono::seconds>(
                    time_stop - std::chrono::high_resolution_clock::now())
                    .count() >= 0);
 }
 
-bool Parameters::time_limit_reached(
-    const std::chrono::high_resolution_clock::time_point &time) {
+bool Parameters::time_limit_reached_sub_method(
+    const std::chrono::high_resolution_clock::time_point &time) const {
     return not(std::chrono::duration_cast<std::chrono::seconds>(
                    time - std::chrono::high_resolution_clock::now())
+                   .count() >= 0) or
+           not(std::chrono::duration_cast<std::chrono::seconds>(
+                   time_stop - std::chrono::high_resolution_clock::now())
                    .count() >= 0);
 }
 
-int64_t
-Parameters::elapsed_time(const std::chrono::high_resolution_clock::time_point &time) {
+int64_t Parameters::elapsed_time(
+    const std::chrono::high_resolution_clock::time_point &time) const {
     return std::chrono::duration_cast<std::chrono::seconds>(time - time_start).count();
 }

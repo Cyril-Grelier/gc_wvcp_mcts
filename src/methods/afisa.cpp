@@ -28,8 +28,7 @@ void afisa(Solution &best_solution, const bool verbose) {
     long perturbation{small_perturbation};
     const long nb_turn_tabu{Graph::g->nb_vertices * 10};
     // main loop of the program
-    while (not Parameters::p->time_limit_reached() and
-           not Parameters::p->time_limit_reached(max_time) and
+    while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn_afisa < Parameters::p->nb_iter_local_search and
            best_solution.score() != Parameters::p->target) {
         ++turn_afisa;
@@ -65,10 +64,9 @@ void afisa(Solution &best_solution, const bool verbose) {
             }
         } else {
             no_improvement++;
-        }
-
-        if (no_improvement == 50) {
-            perturbation = large_perturbation;
+            if (no_improvement == 50) {
+                perturbation = large_perturbation;
+            }
         }
 
         // adaptive adjusment
@@ -117,8 +115,8 @@ void afisa_tabu(Solution &solution,
     std::uniform_int_distribution<int> distribution(0, 10);
     // tabu search loop
     long turn_tabu{0};
-    while (not Parameters::p->time_limit_reached() and
-           not Parameters::p->time_limit_reached(max_time) and turn_tabu < turns) {
+    while (not Parameters::p->time_limit_reached_sub_method(max_time) and
+           turn_tabu < turns) {
         turn_tabu++;
         std::vector<Action> best_actions;
         int best_evaluation{std::numeric_limits<int>::max()};
@@ -154,22 +152,21 @@ void afisa_tabu(Solution &solution,
             }
         }
         if (not best_actions.empty()) {
-            const Action choosen_one{rd::get_random_value(best_actions)};
-            solution.delete_vertex_from_color(choosen_one.vertex);
-            if (solution.is_color_empty(choosen_one.color)) {
-                solution.add_vertex_to_color(choosen_one.vertex,
-                                             solution.add_new_color());
+            const Action chosen_one{rd::get_random_value(best_actions)};
+            solution.delete_vertex_from_color(chosen_one.vertex);
+            if (solution.is_color_empty(chosen_one.color)) {
+                solution.add_vertex_to_color(chosen_one.vertex, solution.add_new_color());
             } else {
-                solution.add_vertex_to_color(choosen_one.vertex, choosen_one.color);
+                solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
             }
             // set tabu
             switch (perturbation) {
             case Perturbation::no_perturbation:
-                solution.tabu[choosen_one.vertex] =
+                solution.tabu[chosen_one.vertex] =
                     turn_tabu + turn_tabu_min + distribution(rd::generator);
                 break;
             case Perturbation::unlimited:
-                solution.tabu[choosen_one.vertex] = turns + 1;
+                solution.tabu[chosen_one.vertex] = turns + 1;
                 break;
             case Perturbation::no_tabu:
                 break;
