@@ -31,7 +31,8 @@ Parameters::Parameters(const std::string &problem,
       max_time_local_search(max_time_local_search_),
       local_search(string_to_vector_local_search(local_search_str_)),
       simulation(string_to_simulation(simulation_str_)),
-      coeff_exploi_explo(coeff_exploi_explo_) {
+      coeff_exploi_explo(coeff_exploi_explo_),
+      local_search_str(local_search_str_) {
     if (method == "local_search") {
         header_csv = "problem,time_limit,rand_seed,target,initialization,"
                      "nb_iter_local_search,max_time_local_search";

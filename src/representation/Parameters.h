@@ -52,6 +52,9 @@ struct Parameters {
     /** @brief Line of data for csv representation*/
     std::string line_csv{};
 
+    /** @brief Local_search for printing*/
+    const std::string local_search_str;
+
     /** @brief Output, stdout if console (set in utils/parsing.cpp*/
     std::FILE *output = stdout;
     /** @brief Output file name if not on console*/
