@@ -10,7 +10,7 @@ void signal_handler(int signum) {
 }
 
 int main(int argc, const char *argv[]) {
-    // see top of file src/representation/Parameters.cpp for default parameters
+    // see src/utils/parsing.cpp for default parameters
     // Get the method
     auto method(parse(argc, argv));
 
