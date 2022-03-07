@@ -31,10 +31,7 @@ Parameters::Parameters(const std::string &problem,
       max_time_local_search(max_time_local_search_),
       local_search(string_to_vector_local_search(local_search_str_)),
       simulation(string_to_simulation(simulation_str_)),
-      coeff_exploi_explo(coeff_exploi_explo_),
-      initialization_str(initialization_str_),
-      local_search_str(local_search_str_),
-      simulation_str(simulation_str_) {
+      coeff_exploi_explo(coeff_exploi_explo_) {
     if (method == "local_search") {
         header_csv = "problem,time_limit,rand_seed,target,initialization,"
                      "nb_iter_local_search,max_time_local_search";
@@ -43,7 +40,7 @@ Parameters::Parameters(const std::string &problem,
                                time_limit,
                                rand_seed,
                                target,
-                               initialization_str,
+                               initialization_str_,
                                nb_iter_local_search,
                                max_time_local_search);
     } else if (method == "mcts") {
@@ -59,10 +56,10 @@ Parameters::Parameters(const std::string &problem,
                                nb_max_iterations,
                                nb_iter_local_search,
                                max_time_local_search,
-                               initialization_str,
-                               simulation_str,
+                               initialization_str_,
+                               simulation_str_,
                                coeff_exploi_explo,
-                               local_search_str);
+                               local_search_str_);
     } else {
         fmt::print(stderr,
                    "Unknown method, please select : "
