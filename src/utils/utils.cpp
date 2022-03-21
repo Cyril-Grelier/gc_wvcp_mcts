@@ -22,3 +22,17 @@ std::string get_date_str() {
     tm << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S");
     return tm.str();
 }
+
+void print_result_ls(const int64_t &best_time,
+                     const Solution &solution,
+                     const long &turn) {
+    fmt::print(Parameters::p->output,
+               "{},{},{},{},{},{},{}\n",
+               get_date_str(),
+               Parameters::p->local_search_str,
+               Graph::g->name,
+               Parameters::p->line_csv,
+               turn,
+               best_time,
+               solution.line_csv());
+}

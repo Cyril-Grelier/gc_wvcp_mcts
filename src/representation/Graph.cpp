@@ -1,5 +1,12 @@
 #include "Graph.h"
 
+#include <fstream>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#include <fmt/printf.h>
+#pragma GCC diagnostic pop
+
 std::unique_ptr<const Graph> Graph::g = nullptr;
 
 void Graph::init_graph(std::unique_ptr<const Graph> graph_) {
@@ -22,4 +29,102 @@ Graph::Graph(const std::string &name_,
       neighborhood(neighborhood_),
       degrees(degrees_),
       weights(weights_) {
+}
+
+const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
+                                              const bool wvcp_problem) {
+    // load the edges and vertices of the graph
+    std::ifstream file;
+    if (wvcp_problem) {
+        file.open("../instances/wvcp_reduced/" + instance_name + ".col");
+    } else {
+        file.open("../instances/wvcp_original/" + instance_name + ".col");
+    }
+    if (!file) {
+        fmt::print(stderr,
+                   "Didn't find {} in ../instances/wvcp_reduced/ or wvcp_original (if "
+                   "problem == gcp)\n"
+                   "Did you run \n\n"
+                   "git submodule init\n"
+                   "git submodule update\n\n"
+                   "before executing the program ?(import instances)\n"
+                   "Otherwise check that you are in the build "
+                   "directory before executing the program\n",
+                   instance_name);
+        exit(1);
+    }
+    int nb_vertices{0}, nb_edges{0}, n1{0}, n2{0};
+    std::vector<std::pair<int, int>> edges_list;
+    std::string first;
+    file >> first;
+    while (!file.eof()) {
+        if (first == "e") {
+            file >> n1 >> n2;
+            edges_list.emplace_back(--n1, --n2);
+        } else if (first == "p") {
+            file >> first >> nb_vertices >> nb_edges;
+            edges_list.reserve(nb_edges);
+        } else {
+            getline(file, first);
+        }
+        file >> first;
+    }
+    file.close();
+
+    std::vector<int> weights(nb_vertices, 1);
+
+    if (wvcp_problem) {
+        // load the weights of the vertices
+        std::ifstream w_file("../instances/wvcp_reduced/" + instance_name + ".col.w");
+        if (!w_file) {
+            fmt::print(stderr,
+                       "Didn't find weights for {} in ../instances/wvcp_reduced/\n",
+                       instance_name);
+            exit(1);
+        }
+        size_t i(0);
+        while (!w_file.eof()) {
+            w_file >> weights[i];
+            ++i;
+        }
+        w_file.close();
+    }
+
+    std::vector<std::vector<bool>> adjacency_matrix(
+        nb_vertices, std::vector<bool>(nb_vertices, false));
+    std::vector<std::vector<int>> neighborhood(nb_vertices, std::vector<int>(0));
+    std::vector<int> degrees(nb_vertices, 0);
+    // Init adjacency matrix and neighborhood of the vertices
+    for (auto p : edges_list) {
+        if (not adjacency_matrix[p.first][p.second]) {
+            adjacency_matrix[p.first][p.second] = true;
+            adjacency_matrix[p.second][p.first] = true;
+            neighborhood[p.first].push_back(p.second);
+            neighborhood[p.second].push_back(p.first);
+            ++nb_edges;
+        }
+    }
+    // Init degrees_ of the vertices
+    for (int vertex{0}; vertex < nb_vertices; ++vertex) {
+        degrees[vertex] = static_cast<int>(neighborhood[vertex].size());
+    }
+    // Uncomment to check if the vertices are well sorted
+    // for(int vertex(0); vertex < nb_vertices-1; ++vertex){
+    //     if(weights[vertex] < weights[vertex + 1] or (
+    //         weights[vertex] == weights[vertex + 1] and
+    //         degrees[vertex] < degrees[vertex + 1]
+    //     )){
+    //         fmt::print(stderr,"error v{}w{}d{} before v{}w{}d{}\nVertices must be
+    //         sorted\n", vertex, weights[vertex], degrees[vertex],vertex,
+    //         weights[vertex], degrees[vertex]);
+    //     }
+    // }
+    return std::make_unique<Graph>(instance_name,
+                                   nb_vertices,
+                                   nb_edges,
+                                   edges_list,
+                                   adjacency_matrix,
+                                   neighborhood,
+                                   degrees,
+                                   weights);
 }

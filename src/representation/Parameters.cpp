@@ -18,7 +18,7 @@ Parameters::Parameters(const std::string &problem,
                        const long &nb_iter_local_search_,
                        const int &max_time_local_search_,
                        const std::string &local_search_str_,
-                       const std::string &simulation_str_,
+                       const std::string &simulation_,
                        const double &coeff_exploi_explo_)
     : time_start(std::chrono::high_resolution_clock::now()),
       time_limit(time_limit_),
@@ -30,7 +30,7 @@ Parameters::Parameters(const std::string &problem,
       nb_iter_local_search(nb_iter_local_search_),
       max_time_local_search(max_time_local_search_),
       local_search(string_to_vector_local_search(local_search_str_)),
-      simulation(string_to_simulation(simulation_str_)),
+      simulation(simulation_),
       coeff_exploi_explo(coeff_exploi_explo_),
       local_search_str(local_search_str_) {
     if (method == "local_search") {
@@ -58,7 +58,7 @@ Parameters::Parameters(const std::string &problem,
                                nb_iter_local_search,
                                max_time_local_search,
                                initialization_str_,
-                               simulation_str_,
+                               simulation_,
                                coeff_exploi_explo,
                                local_search_str_);
     } else {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../representation/Solution.h"
+#include "../representation/ProxiSolutionILSTS.h"
 
 /**
  * @brief Local search grenade from ILSTS
@@ -25,7 +25,7 @@ void ilsts(Solution &solution, const bool verbose = false);
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu);
+bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu);
 
 /**
  * @brief Step 3 of ILSTS algorithm
@@ -39,7 +39,7 @@ bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu);
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_3(Solution &solution,
+bool M_3(ProxiSolutionILSTS &solution,
          const long iter,
          const int min_cost,
          const int vertex,
@@ -56,7 +56,7 @@ bool M_3(Solution &solution,
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_4(Solution &solution,
+bool M_4(ProxiSolutionILSTS &solution,
          const long iter,
          const std::vector<int> &free_vertices,
          std::vector<long> &tabu);
@@ -71,7 +71,7 @@ bool M_4(Solution &solution,
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_5(Solution &solution,
+bool M_5(ProxiSolutionILSTS &solution,
          const long iter,
          const std::vector<int> &free_vertices,
          std::vector<long> &tabu);
@@ -85,4 +85,4 @@ bool M_5(Solution &solution,
  * @return true modification of the solution
  * @return false no modification
  */
-bool M_6(Solution &solution, const long iter, std::vector<long> &tabu);
+bool M_6(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu);

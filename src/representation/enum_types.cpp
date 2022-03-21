@@ -2,23 +2,12 @@
 
 #include "../utils/utils.h"
 
-Simulation string_to_simulation(const std::string &simulation) {
-    if (simulation == "greedy") {
-        return Simulation::greedy;
-    } else if (simulation == "local_search") {
-        return Simulation::local_search;
-    } else if (simulation == "depth") {
-        return Simulation::depth;
-    } else if (simulation == "fit") {
-        return Simulation::fit;
-    } else if (simulation == "depth_fit") {
-        return Simulation::depth_fit;
-    }
-    fmt::print(stderr,
-               "Unknown simulation, please select : "
-               "greedy, local_search,"
-               "depth, fit or depth_fit\n");
-    exit(1);
+bool operator==(const Action &m1, const Action &m2) {
+    return m1.color == m2.color and m1.vertex == m2.vertex and m1.score == m2.score;
+}
+
+bool compare_actions(const Action &a, const Action &b) {
+    return (a.score > b.score) or (a.score == b.score and a.color > b.color);
 }
 
 Initialization string_to_initialization(const std::string &initialization) {

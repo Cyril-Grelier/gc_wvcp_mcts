@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "../representation/Solution.h"
+
 /**
  * @brief Insert element in sorted vector
  *
@@ -84,3 +86,14 @@ std::vector<std::string> split_string(std::string to_split, const std::string &d
  * @return std::string the date
  */
 std::string get_date_str();
+
+/**
+ * @brief Print results for local search
+ *
+ * @param best_time
+ * @param solution
+ * @param turn
+ */
+void print_result_ls(const int64_t &best_time,
+                     const Solution &solution,
+                     const long &turn);

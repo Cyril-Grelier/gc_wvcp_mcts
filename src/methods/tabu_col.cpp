@@ -7,11 +7,6 @@
 #include "../utils/utils.h"
 
 void tabu_col(Solution &best_solution, const bool verbose) {
-    const int first_freeze_vertex{best_solution.get_rank_placed_vertices()};
-
-    if ((Graph::g->nb_vertices - first_freeze_vertex) < (Graph::g->nb_vertices * 0.20)) {
-        return;
-    }
 
     const auto max_time{std::chrono::high_resolution_clock::now() +
                         std::chrono::seconds(Parameters::p->max_time_local_search)};
@@ -54,7 +49,7 @@ void tabu_col(Solution &best_solution, const bool verbose) {
                             continue;
                         }
                         const int test_conflict{
-                            working_solution.get_delta_conflicts(vertex, color)};
+                            working_solution.delta_conflicts(vertex, color)};
                         if ((test_conflict < best_evaluation and
                              tabu_matrix[vertex][color] <= turn) or
                             (working_solution.nb_conflicts() + test_conflict == 0)) {
@@ -73,26 +68,19 @@ void tabu_col(Solution &best_solution, const bool verbose) {
                 }
             }
             if (not best_actions.empty()) {
-                const auto chosen_one{rd::get_random_value(best_actions)};
-                const int old_color{
-                    working_solution.delete_vertex_from_color(chosen_one.first)};
-                working_solution.add_vertex_to_color(chosen_one.first, chosen_one.second);
+                const auto chosen_one{rd::choice(best_actions)};
+                const int old_color{working_solution.delete_from_color(chosen_one.first)};
+                working_solution.add_to_color(chosen_one.first, chosen_one.second);
                 tabu_matrix[chosen_one.first][old_color] =
                     static_cast<int>(turn) + distribution(rd::generator) +
                     static_cast<int>(working_solution.nb_conflicts() * 0.6);
                 if (working_solution.nb_conflicts() < best_nb_conflicts) {
                     best_nb_conflicts = working_solution.nb_conflicts();
                     if (verbose) {
-                        fmt::print(Parameters::p->output,
-                                   "{},{},{},{},{},{},{}\n",
-                                   get_date_str(),
-                                   Parameters::p->local_search_str,
-                                   Graph::g->name,
-                                   Parameters::p->line_csv,
-                                   turn,
-                                   Parameters::p->elapsed_time(
-                                       std::chrono::high_resolution_clock::now()),
-                                   working_solution.line_csv());
+                        print_result_ls(Parameters::p->elapsed_time(
+                                            std::chrono::high_resolution_clock::now()),
+                                        working_solution,
+                                        0);
                     }
                 }
             }
@@ -107,27 +95,11 @@ void tabu_col(Solution &best_solution, const bool verbose) {
             if (verbose) {
                 best_time = Parameters::p->elapsed_time(
                     std::chrono::high_resolution_clock::now());
-                fmt::print(Parameters::p->output,
-                           "{},{},{},{},{},{},{}\n",
-                           get_date_str(),
-                           Parameters::p->local_search_str,
-                           Graph::g->name,
-                           Parameters::p->line_csv,
-                           turn,
-                           best_time,
-                           working_solution.line_csv());
+                print_result_ls(best_time, working_solution, turn);
             }
         }
     }
     if (verbose) {
-        fmt::print(Parameters::p->output,
-                   "{},{},{},{},{},{},{}\n",
-                   get_date_str(),
-                   Parameters::p->local_search_str,
-                   Graph::g->name,
-                   Parameters::p->line_csv,
-                   turn_main,
-                   best_time,
-                   best_solution.line_csv());
+        print_result_ls(best_time, best_solution, turn_main);
     }
 }

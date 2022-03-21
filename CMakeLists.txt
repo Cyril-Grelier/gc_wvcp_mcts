@@ -10,16 +10,16 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_ARCH_FLAGS} -O3 -DNDEBUG -Wall -s -isystem 
 add_executable(${CMAKE_PROJECT_NAME}
         src/main.cpp
         # utils
-        src/utils/parsing.cpp src/utils/parsing.h
         src/utils/random_generator.cpp src/utils/random_generator.h
         src/utils/utils.cpp src/utils/utils.h
         # representation
-        src/representation/Action.cpp src/representation/Action.h
         src/representation/enum_types.cpp src/representation/enum_types.h
         src/representation/Graph.cpp src/representation/Graph.h
         src/representation/Method.h
         src/representation/Node.cpp src/representation/Node.h
         src/representation/Parameters.cpp src/representation/Parameters.h
+        src/representation/ProxiSolutionILSTS.cpp src/representation/ProxiSolutionILSTS.h
+        src/representation/ProxiSolutionRedLS.cpp src/representation/ProxiSolutionRedLS.h
         src/representation/Solution.cpp src/representation/Solution.h
         # methods
         src/methods/afisa.cpp src/methods/afisa.h

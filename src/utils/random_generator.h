@@ -13,7 +13,7 @@ extern std::mt19937 generator;
  * @param vector container
  * @return T random element from the vector
  */
-template <typename T> T get_random_value(const std::vector<T> &vector) {
+template <typename T> T choice(const std::vector<T> &vector) {
     auto begin{vector.begin()};
     std::uniform_int_distribution<> dis(
         0, static_cast<int>(std::distance(begin, vector.end())) - 1);

@@ -43,7 +43,7 @@ struct Parameters {
     // MCTS
 
     /** @brief Type of simulation (MCTS)*/
-    Simulation simulation;
+    std::string simulation;
     /** @brief Coefficient exploration vs exploitation (MCTS)*/
     const double coeff_exploi_explo;
 
@@ -80,7 +80,7 @@ struct Parameters {
                         const long &nb_iter_local_search_,
                         const int &max_time_local_search_,
                         const std::string &local_search_str_,
-                        const std::string &simulation_str_,
+                        const std::string &simulation_,
                         const double &coeff_exploi_explo_);
 
     /**

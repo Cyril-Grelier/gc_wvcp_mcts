@@ -3,7 +3,6 @@
 #include <memory>
 #include <tuple>
 
-#include "Action.h"
 #include "Graph.h"
 #include "Parameters.h"
 
@@ -14,12 +13,9 @@
 class Solution {
   public:
     /** @brief WVCP best found score*/
-    static int best_score;
+    static int best_score_wvcp;
     /** @brief Minimal nb of color found (you have to update it)*/
     static int best_nb_colors;
-    /** @brief Tabu list*/
-    std::vector<long> tabu{};
-
     /** @brief Header csv*/
     const static std::string header_csv;
 
@@ -31,37 +27,32 @@ class Solution {
     /** @brief For each color, list of the weights of the vertices colored with the color,
      * sorted*/
     std::vector<std::vector<int>> _colors_weights{};
+
     /** @brief For each color, for each vertex, number of neighbors in the color*/
     std::vector<std::vector<int>> _conflicts_colors{};
-    /** @brief For each color, first vertices are with the color (until color size) last
-     * without*/
-    std::vector<std::vector<int>> _color_partition{};
-    /** @brief For each color, for each vertex, position of the vertex in the color
-     * partition*/
-    std::vector<std::vector<int>> _position{};
-    /** @brief For each vertex, number of color the vertex can take without increasing the
-     * score*/
-    std::vector<int> _nb_free_colors{};
-    /** @brief List of unused colors*/
-    std::vector<int> _empty_colors{};
+
+    /** @brief number of openned colors (not automaticaly all used)*/
+    int _nb_colors{0};
     /** @brief List of used colors*/
     std::vector<int> _non_empty_colors{};
+    /** @brief List of unused colors*/
+    std::vector<int> _empty_colors{};
+
     /** @brief List of vertices to color*/
     std::vector<int> _free_vertices{};
-    /** @brief List of unassigned vertices*/
-    std::vector<int> _unassigned{};
-    /** @brief number of openned colors (not automaticaly all used)*/
-    int _nb_colors{};
+
     /** @brief WVCP score*/
-    int _score{};
-    /** @brief WVCP Score when some vertices are unassigned*/
-    int _unassigned_score{};
+    int _score_wvcp{0};
+
     /** @brief number of conflicts in the current solution*/
-    int _nb_conflicts;
-    /** @brief list of conflicting edges in the solution*/
-    std::vector<std::tuple<int, int>> _conflict_edges;
-    /** @brief edge weights (for RedLS)*/
-    std::vector<std::vector<int>> _edge_weights;
+    int _nb_conflicts{0};
+
+    /**
+     * @brief Gives a new empty color, add prepare all structures
+     *
+     * @return int the new color
+     */
+    [[nodiscard]] int add_new_color();
 
   public:
     /**
@@ -77,32 +68,6 @@ class Solution {
     ~Solution() = default;
 
     /**
-     * @brief Give the first available color for the given vertex,
-     * -1 if no color available
-     *
-     * @param vertex the vertex
-     * @return int the first available color
-     */
-    [[nodiscard]] int first_available_color(const int &vertex);
-
-    /**
-     * @brief Delete heaviest vertices from force colors
-     *
-     * @param force Number of deletions
-     * @param first_freeze_vertex if some vertex cannot be moved
-     * @return true if ok
-     * @return false if all deletions didn't happened
-     */
-    bool unassigned_random_heavy_vertices(const int force, const int first_freeze_vertex);
-
-    /**
-     * @brief Do a grenade operator on force random vertices
-     *
-     * @param force number of time the grenade operator is applied
-     */
-    void perturb_vertices(const int force);
-
-    /**
      * @brief Color the vertex to the color
      * if the color is not created, the color is created
      * if the vertex is already colored, the vertex is uncolored before colored
@@ -113,7 +78,7 @@ class Solution {
      * @return int the color used (may be different from the given color if the color was
      * empty)
      */
-    int add_vertex_to_color(const int vertex, const int color);
+    int add_to_color(const int vertex, const int color_proposed);
 
     /**
      * @brief Remove color of a vertex
@@ -121,53 +86,18 @@ class Solution {
      * @param vertex vertex to modify
      * @return int the old color
      */
-    int delete_vertex_from_color(const int vertex);
+    int delete_from_color(const int vertex);
 
     /**
-     * @brief Gives a new empty color, add prepare all structures
+     * @brief Give the first available color for the given vertex,
+     * -1 if no color available
      *
-     * @return int the new color
+     * @param vertex the vertex
+     * @return int the first available color
      */
-    [[nodiscard]] int add_new_color();
+    [[nodiscard]] int first_available_color(const int &vertex);
 
-    /**
-     * @brief Assigned vertices to color randomly
-     *
-     * @param vertices vertices to color, the list is modified
-     */
-    void random_assignment(std::vector<int> &vertices);
-
-    /**
-     * @brief Assigned color to vertex randomly without increasing the score
-     *
-     * @param vertex the vertex to color
-     * @return true the vertex has been colored without increasing the score
-     * @return false there is no color available to color the vertex without increasing
-     * the score
-     */
-    bool random_assignment_constrained(const int vertex);
-
-    /**
-     * @brief Assigned color to the vertices randomly without increasing the score
-     *
-     * @param vertices vertices to color, the list is modified, if the list isn't empty
-     * after the function, the vertices left haven't free colors
-     */
-    void random_assignment_constrained(std::vector<int> &vertices);
-
-    /**
-     * @brief Give the next possible moves with the current placement of vertices
-     *
-     * @return std::vector<Action> List of next moves
-     */
-    [[nodiscard]] std::vector<Action> next_possible_moves();
-
-    /**
-     * @brief Apply a move to the solution
-     *
-     * @param mv move to apply
-     */
-    void apply_move(const Action &mv);
+    [[nodiscard]] std::vector<int> available_colors(const int &vertex) const;
 
     /**
      * @brief Check the validity of the solution
@@ -178,31 +108,13 @@ class Solution {
     bool check_solution() const;
 
     /**
-     * @brief Init and reset tabu list
-     *
-     */
-    void reset_tabu();
-
-    /**
-     * @brief Init and reset edge weight matrix (for RedLS)
-     *
-     */
-    void reset_edge_weights();
-
-    /**
-     * @brief Increment edge weight matrix (for RedLS)
-     *
-     */
-    void increment_edge_weights();
-
-    /**
      * @brief Compute the difference on the score if the vertex is colored with the color
      *
      * @param vertex the vertex to color
      * @param color the color to use
      * @return int difference on the score
      */
-    [[nodiscard]] int get_delta_score(const int vertex, const int color) const;
+    [[nodiscard]] int delta_wvcp_score(const int vertex, const int color) const;
 
     /**
      * @brief Compute the difference on the score if the vertex lost its color
@@ -210,73 +122,21 @@ class Solution {
      * @param vertex the vertex to check
      * @return int the difference on the score
      */
-    [[nodiscard]] int get_delta_old_color(const int vertex) const;
-
-    /**
-     * @brief Gives the score of the solution or unassigned score if incomplete
-     *
-     * @return int the score maybe unassigned
-     */
-    [[nodiscard]] int get_score_maybe_unassigned() const;
-
-    /**
-     * @brief Return unassigned vertices
-     *
-     * @return const std::vector<int>& unassigned vertices
-     */
-    [[nodiscard]] const std::vector<int> &unassigned() const;
-
-    /**
-     * @brief Return the number of color where the vertex can be moved without
-     * incrementing the score
-     *
-     * @param vertex the vertex
-     * @return int the number of color free
-     */
-    [[nodiscard]] int nb_free_colors(const int &vertex) const;
+    [[nodiscard]] int delta_wvcp_score_old_color(const int vertex) const;
 
     /**
      * @brief Gives the score of the solution
      *
      * @return int the score
      */
-    [[nodiscard]] int score() const;
-
-    /**
-     * @brief Gives the unassigned score of the solution
-     *
-     * @return int the unassigned score
-     */
-    [[nodiscard]] int unassigned_score() const;
+    [[nodiscard]] int score_wvcp() const;
 
     /**
      * @brief Get the number of the last placed vertex
      *
      * @return int the number of the last placed vertex
      */
-    [[nodiscard]] int get_rank_placed_vertices() const;
-
-    /**
-     * @brief Return is there is or not unassigned vertices
-     *
-     * @return true there is no unassigned vertices
-     * @return false there is unassigned vertices
-     */
-    [[nodiscard]] bool has_unassigned_vertices() const;
-
-    /**
-     * @brief Add a vertex to the unassigned list
-     *
-     * @param vertex vertex to add
-     */
-    void add_unassigned_vertex(const int &vertex);
-
-    /**
-     * @brief Remove the given vertex from the unassigned list
-     *
-     * @param vertex vertex to remove
-     */
-    void remove_unassigned_vertex(const int &vertex);
+    [[nodiscard]] int first_free_vertex() const;
 
     /**
      * @brief Return the colors of the vertices
@@ -328,13 +188,6 @@ class Solution {
     [[nodiscard]] int nb_conflicts() const;
 
     /**
-     * @brief Return the list of conflicting edges
-     *
-     * @return list of conflicting edges (tuples)
-     */
-    [[nodiscard]] std::vector<std::tuple<int, int>> conflict_edges() const;
-
-    /**
      * @brief Return whether the vertex has conflict or not
      *
      * @param vertex the vertex
@@ -351,7 +204,9 @@ class Solution {
      * @param color the color to use
      * @return int the difference on the number of conflicts
      */
-    [[nodiscard]] int get_delta_conflicts(const int vertex, const int color) const;
+    [[nodiscard]] int delta_conflicts(const int vertex, const int color) const;
+
+    int pop_first_free_vertex();
 
     /**
      * @brief Close colors and push unassigned vertices other colors and create conflicts
@@ -406,6 +261,10 @@ class Solution {
      * @return false vertex in the color
      */
     [[nodiscard]] bool is_color_empty(const int color) const;
+
+    [[nodiscard]] const std::vector<std::vector<int>> &conflicts_colors() const;
+
+    void shuffle_non_empty_color();
 
     /**
      * @brief Return the solution in csv format

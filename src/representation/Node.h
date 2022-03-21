@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "Action.h"
+#include "enum_types.h"
 
 /**
  * @brief Representation of a node for a MCTS

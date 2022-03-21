@@ -6,8 +6,21 @@
 #include "../representation/Solution.h"
 #include "LocalSearch.h"
 
+struct SimulationHelper {
+    int fit_condition{std::numeric_limits<int>::max() - 1};
+    std::vector<Solution> past_solutions{};
+};
+
 /** @brief Pointer to simulation function*/
-typedef void (*simulation_ptr)(Solution &, const local_search_ptr &);
+typedef void (*simulation_ptr)(Solution &, const local_search_ptr &, SimulationHelper &);
+
+/**
+ * @brief Get the simulation function
+ *
+ * @param simulation name of the simulation
+ * @return simulation_ptr function
+ */
+simulation_ptr get_simulation_fct(const std::string &simulation);
 
 /**
  * @brief Method for Monte Carlo Tree Search
@@ -95,12 +108,18 @@ class MCTS : public Method {
 };
 
 /**
- * @brief Get the simulation function
+ * @brief Give the next possible moves with the current placement of vertices
  *
- * @param simulation
- * @return simulation_ptr function
+ * @return std::vector<Action> List of next moves
  */
-simulation_ptr get_simulation_fct(const Simulation &simulation);
+std::vector<Action> next_possible_moves(const Solution &solution);
+
+/**
+ * @brief Apply a move to the solution
+ *
+ * @param mv move to apply
+ */
+void apply_action(Solution &solution, const Action &action);
 
 /**
  * @brief Apply the greedy on the solution and allow to do a local search if the fitness
@@ -109,7 +128,9 @@ simulation_ptr get_simulation_fct(const Simulation &simulation);
  * @param solution solution to use, the solution will be modified
  * @param local_search local search to use
  */
-void fit(Solution &solution, const local_search_ptr &local_search);
+void fit(Solution &solution,
+         const local_search_ptr &local_search,
+         SimulationHelper &helper);
 
 /**
  * @brief Apply the greedy on the solution and allow to do a local search randomly with
@@ -118,7 +139,9 @@ void fit(Solution &solution, const local_search_ptr &local_search);
  * @param solution solution to use, the solution will be modified
  * @param local_search local search to use
  */
-void depth(Solution &solution, const local_search_ptr &local_search);
+void depth(Solution &solution,
+           const local_search_ptr &local_search,
+           SimulationHelper &helper);
 
 /**
  * @brief Apply the greedy on the solution and allow to do a local search randomly with
@@ -128,4 +151,6 @@ void depth(Solution &solution, const local_search_ptr &local_search);
  * @param solution solution to use, the solution will be modified
  * @param local_search local search to use
  */
-void depth_fit(Solution &solution, const local_search_ptr &local_search);
+void depth_fit(Solution &solution,
+               const local_search_ptr &local_search,
+               SimulationHelper &helper);

@@ -8,6 +8,17 @@
 #include "../utils/random_generator.h"
 #include "../utils/utils.h"
 
+simulation_ptr get_simulation_fct(const std::string &simulation) {
+    if (simulation == "fit") {
+        return fit;
+    } else if (simulation == "depth") {
+        return depth;
+    } else if (simulation == "depth_fit") {
+        return depth_fit;
+    }
+    return nullptr;
+}
+
 MCTS::MCTS()
     : _root_node(nullptr),
       _current_node{_root_node},
@@ -20,11 +31,11 @@ MCTS::MCTS()
       _simulation(get_simulation_fct(Parameters::p->simulation)) {
 
     // Creation of the base solution and root node
-    std::vector<Action> next_moves{_base_solution.next_possible_moves()};
+    const auto next_moves{next_possible_moves(_base_solution)};
     assert(next_moves.size() == 1);
-    _base_solution.apply_move(next_moves[0]);
-    std::vector<Action> next_possible_moves = _base_solution.next_possible_moves();
-    _root_node = std::make_shared<Node>(nullptr, next_moves[0], next_possible_moves);
+    apply_action(_base_solution, next_moves[0]);
+    const auto next_possible_actions{next_possible_moves(_base_solution)};
+    _root_node = std::make_shared<Node>(nullptr, next_moves[0], next_possible_actions);
 
     fmt::print(Parameters::p->output, "{}", header_csv());
 }
@@ -32,11 +43,12 @@ MCTS::MCTS()
 bool MCTS::stop_condition() const {
     return (_turn < Parameters::p->nb_max_iterations) and
            (not Parameters::p->time_limit_reached()) and
-           not(Solution::best_score <= Parameters::p->target) and
+           not(Solution::best_score_wvcp <= Parameters::p->target) and
            not _root_node->fully_explored();
 }
 
 void MCTS::run() {
+    SimulationHelper helper;
     while (stop_condition()) {
 
         _current_node = _root_node;
@@ -48,23 +60,28 @@ void MCTS::run() {
 
         _initialization(_current_solution);
 
+        // Doesn't perform local search if less than 15%
+        // of the vertices are free to be moved
+        const bool can_perform_ls{
+            (Graph::g->nb_vertices - _current_solution.first_free_vertex()) <
+            (Graph::g->nb_vertices * 0.15)};
         // if the simulation is depth/fit/depth_fit
-        if (_simulation) {
-            _simulation(_current_solution, _local_search);
+        if (_simulation and can_perform_ls) {
+            _simulation(_current_solution, _local_search, helper);
         } else // if the simulation is a simple local search
-            if (_local_search) {
+            if (_local_search and can_perform_ls) {
             _local_search(_current_solution, false);
         }
 
-        const int score{_current_solution.score()};
-        _current_node->update(score);
+        const int score_wvcp{_current_solution.score_wvcp()};
+        _current_node->update(score_wvcp);
 
-        if (_best_solution.best_score > score) {
+        if (_best_solution.best_score_wvcp > score_wvcp) {
             _t_best = std::chrono::high_resolution_clock::now();
-            Solution::best_score = score;
+            Solution::best_score_wvcp = score_wvcp;
             _best_solution = _current_solution;
             fmt::print(Parameters::p->output, "{}", line_csv());
-            _root_node->clean_graph(_best_solution.best_score);
+            _root_node->clean_graph(_best_solution.best_score_wvcp);
         }
         ++_turn;
     }
@@ -83,19 +100,18 @@ void MCTS::selection() {
                 next_nodes.push_back(node);
             }
         }
-        _current_node = rd::get_random_value(next_nodes);
-        _current_solution.apply_move(_current_node->move());
+        _current_node = rd::choice(next_nodes);
+        apply_action(_current_solution, _current_node->move());
     }
 }
 
 void MCTS::expansion() {
     const Action next_move{_current_node->next_child()};
-    _current_solution.apply_move(next_move);
-    const std::vector<Action> next_possible_moves =
-        _current_solution.next_possible_moves();
-    if (not next_possible_moves.empty()) {
+    apply_action(_current_solution, next_move);
+    const auto next_possible_actions{next_possible_moves(_current_solution)};
+    if (not next_possible_actions.empty()) {
         _current_node =
-            std::make_shared<Node>(_current_node.get(), next_move, next_possible_moves);
+            std::make_shared<Node>(_current_node.get(), next_move, next_possible_actions);
         _current_node->add_child_to_parent(_current_node);
     }
 }
@@ -121,6 +137,36 @@ void MCTS::expansion() {
                        _best_solution.line_csv());
 }
 
+std::vector<Action> next_possible_moves(const Solution &solution) {
+    std::vector<Action> moves;
+    if (solution.free_vertices().empty()) {
+        return moves;
+    }
+    const int next_vertex = solution.first_free_vertex();
+    for (const auto color : solution.non_empty_colors()) {
+        if (solution.conflicts_colors(color, next_vertex) == 0) {
+            const int next_score =
+                solution.score_wvcp() + solution.delta_wvcp_score(next_vertex, color);
+            if (Solution::best_score_wvcp > next_score) {
+                moves.emplace_back(Action{next_vertex, color, next_score});
+            }
+        }
+    }
+    const int next_score = solution.score_wvcp() + Graph::g->weights[next_vertex];
+    if (Solution::best_score_wvcp > next_score) {
+        moves.emplace_back(Action{next_vertex, -1, next_score});
+    }
+    std::sort(moves.begin(), moves.end(), compare_actions);
+    return moves;
+}
+
+void apply_action(Solution &solution, const Action &action) {
+    solution.add_to_color(action.vertex, action.color);
+    assert(solution.first_free_vertex() == action.vertex);
+    solution.pop_first_free_vertex();
+    assert(solution.score_wvcp() == action.score);
+}
+
 void MCTS::to_dot(const std::string &file_name) const {
     // fmt::format(
     //     "../graph_dot/{}_{}_{:09}.dot", g->name, _parameters->rand_seed, _turn);
@@ -131,56 +177,41 @@ void MCTS::to_dot(const std::string &file_name) const {
     }
 }
 
-simulation_ptr get_simulation_fct(const Simulation &simulation) {
-    switch (simulation) {
-    case Simulation::fit:
-        return fit;
-        break;
-    case Simulation::depth:
-        return depth;
-        break;
-    case Simulation::depth_fit:
-        return depth_fit;
-        break;
-    default:
-        return nullptr;
-    }
-}
-
-void fit(Solution &solution, const local_search_ptr &local_search) {
-    static int fit_condition = std::numeric_limits<int>::max() - 1;
-    static std::vector<Solution> past_solutions;
-    if (solution.score() <= (fit_condition + 1)) {
-        if (ok_distance(solution, past_solutions, Graph::g->nb_vertices / 10)) {
-            past_solutions.push_back(solution);
-            fit_condition = std::min(solution.score(), fit_condition);
+void fit(Solution &solution,
+         const local_search_ptr &local_search,
+         SimulationHelper &helper) {
+    if (solution.score_wvcp() <= (helper.fit_condition + 1)) {
+        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+            helper.past_solutions.push_back(solution);
+            helper.fit_condition = std::min(solution.score_wvcp(), helper.fit_condition);
             local_search(solution, false);
         }
     }
 }
 
-void depth(Solution &solution, const local_search_ptr &local_search) {
-    static std::vector<Solution> past_solutions;
+void depth(Solution &solution,
+           const local_search_ptr &local_search,
+           SimulationHelper &helper) {
     std::uniform_int_distribution<int> distribution(0, 100);
-    if ((solution.get_rank_placed_vertices() * 100) / Graph::g->nb_vertices >=
+    if ((solution.first_free_vertex() * 100) / Graph::g->nb_vertices >=
         distribution(rd::generator)) {
-        if (ok_distance(solution, past_solutions, Graph::g->nb_vertices / 10)) {
-            past_solutions.push_back(solution);
+        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+            helper.past_solutions.push_back(solution);
             local_search(solution, false);
         }
     }
 }
 
-void depth_fit(Solution &solution, const local_search_ptr &local_search) {
-    static int fit_condition = std::numeric_limits<int>::max() - 1;
-    static std::vector<Solution> past_solutions;
+void depth_fit(Solution &solution,
+               const local_search_ptr &local_search,
+               SimulationHelper &helper) {
     std::uniform_int_distribution<int> distribution(0, 100);
-    if (solution.score() <= (fit_condition + 1) and
-        (solution.get_rank_placed_vertices() * 100) / Graph::g->nb_vertices <=
+    if (solution.score_wvcp() <= (helper.fit_condition + 1) and
+        (solution.first_free_vertex() * 100) / Graph::g->nb_vertices <=
             distribution(rd::generator)) {
-        if (ok_distance(solution, past_solutions, Graph::g->nb_vertices / 10)) {
-            past_solutions.push_back(solution);
-            fit_condition = std::min(solution.score(), fit_condition);
+        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+            helper.past_solutions.push_back(solution);
+            helper.fit_condition = std::min(solution.score_wvcp(), helper.fit_condition);
             local_search(solution, false);
         }
     }

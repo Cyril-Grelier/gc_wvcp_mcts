@@ -7,12 +7,6 @@ void afisa(Solution &best_solution, const bool verbose) {
     // best_solution stay legal during the search, its updated when a
     // new best score with no penalty is found
 
-    // for MCTS
-    const int first_freeze_vertex{best_solution.get_rank_placed_vertices()};
-    if ((Graph::g->nb_vertices - first_freeze_vertex) < (Graph::g->nb_vertices * 0.20)) {
-        return;
-    }
-
     auto max_time{std::chrono::high_resolution_clock::now() +
                   std::chrono::seconds(Parameters::p->max_time_local_search)};
 
@@ -30,7 +24,7 @@ void afisa(Solution &best_solution, const bool verbose) {
     // main loop of the program
     while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn_afisa < Parameters::p->nb_iter_local_search and
-           best_solution.score() != Parameters::p->target) {
+           best_solution.score_wvcp() != Parameters::p->target) {
         ++turn_afisa;
 
         Solution solution = best_afisa_sol;
@@ -44,7 +38,7 @@ void afisa(Solution &best_solution, const bool verbose) {
                    max_time);
 
         // if new best score found
-        if (best_afisa_sol.score() < best_solution.score() and
+        if (best_afisa_sol.score_wvcp() < best_solution.score_wvcp() and
             best_afisa_sol.nb_conflicts() == 0) {
             best_solution = best_afisa_sol;
             no_improvement = 0;
@@ -52,15 +46,8 @@ void afisa(Solution &best_solution, const bool verbose) {
             if (verbose) {
                 best_time = Parameters::p->elapsed_time(
                     std::chrono::high_resolution_clock::now());
-                fmt::print(Parameters::p->output,
-                           "{},{},{},{},{},{},{}\n",
-                           get_date_str(),
-                           Parameters::p->local_search_str,
-                           Graph::g->name,
-                           Parameters::p->line_csv,
-                           turn_afisa,
-                           best_time,
-                           best_solution.line_csv());
+
+                print_result_ls(best_time, best_solution, turn_afisa);
             }
         } else {
             no_improvement++;
@@ -90,15 +77,7 @@ void afisa(Solution &best_solution, const bool verbose) {
                    max_time);
     }
     if (verbose) {
-        fmt::print(Parameters::p->output,
-                   "{},{},{},{},{},{},{}\n",
-                   get_date_str(),
-                   Parameters::p->local_search_str,
-                   Graph::g->name,
-                   Parameters::p->line_csv,
-                   turn_afisa,
-                   best_time,
-                   best_solution.line_csv());
+        print_result_ls(best_time, best_solution, turn_afisa);
     }
 }
 
@@ -109,7 +88,7 @@ void afisa_tabu(Solution &solution,
                 const long &turns,
                 const Perturbation &perturbation,
                 const std::chrono::high_resolution_clock::time_point &max_time) {
-    solution.reset_tabu();
+    std::vector<long> tabu_list(Graph::g->nb_vertices, 0);
     const int turn_tabu_min{static_cast<int>(
         0.2 * static_cast<double>(best_solution.free_vertices().size()))};
     std::uniform_int_distribution<int> distribution(0, 10);
@@ -121,7 +100,7 @@ void afisa_tabu(Solution &solution,
         std::vector<Action> best_actions;
         int best_evaluation{std::numeric_limits<int>::max()};
         for (const auto &vertex : solution.free_vertices()) {
-            for (int color{0}; color < solution.nb_colors() + 1; ++color) {
+            for (int color{0}; color <= solution.nb_colors(); ++color) {
                 if (color == solution.color(vertex)) {
                     continue;
                 }
@@ -134,51 +113,50 @@ void afisa_tabu(Solution &solution,
                         : solution.conflicts_colors(color, vertex) -
                               solution.conflicts_colors(solution.color(vertex), vertex)};
                 const int test_score{
-                    solution.score() + solution.get_delta_score(vertex, color) +
+                    solution.score_wvcp() + solution.delta_wvcp_score(vertex, color) +
                     penalty_coeff * (delta_penalty + solution.nb_conflicts())};
-                if ((test_score < best_evaluation and
-                     solution.tabu[vertex] <= turn_tabu) or
-                    (test_score < best_solution.score() and
+                if ((test_score < best_evaluation and tabu_list[vertex] <= turn_tabu) or
+                    (test_score < best_solution.score_wvcp() and
                      (solution.nb_conflicts() + delta_penalty == 0))) {
                     best_actions.clear();
                     best_actions.emplace_back(Action{vertex, color, test_score});
                     best_evaluation = test_score;
                 } else if (test_score == best_evaluation and
-                           (solution.tabu[vertex] <= turn_tabu or
-                            (test_score < best_solution.score() and
+                           (tabu_list[vertex] <= turn_tabu or
+                            (test_score < best_solution.score_wvcp() and
                              (solution.nb_conflicts() + delta_penalty == 0)))) {
                     best_actions.emplace_back(Action{vertex, color, test_score});
                 }
             }
         }
         if (not best_actions.empty()) {
-            const Action chosen_one{rd::get_random_value(best_actions)};
-            solution.delete_vertex_from_color(chosen_one.vertex);
+            const Action chosen_one{rd::choice(best_actions)};
+            solution.delete_from_color(chosen_one.vertex);
             if (solution.is_color_empty(chosen_one.color)) {
-                solution.add_vertex_to_color(chosen_one.vertex, solution.add_new_color());
+                solution.add_to_color(chosen_one.vertex, -1);
             } else {
-                solution.add_vertex_to_color(chosen_one.vertex, chosen_one.color);
+                solution.add_to_color(chosen_one.vertex, chosen_one.color);
             }
             // set tabu
             switch (perturbation) {
             case Perturbation::no_perturbation:
-                solution.tabu[chosen_one.vertex] =
+                tabu_list[chosen_one.vertex] =
                     turn_tabu + turn_tabu_min + distribution(rd::generator);
                 break;
             case Perturbation::unlimited:
-                solution.tabu[chosen_one.vertex] = turns + 1;
+                tabu_list[chosen_one.vertex] = turns + 1;
                 break;
             case Perturbation::no_tabu:
                 break;
             }
 
-            if ((solution.score() + penalty_coeff * solution.nb_conflicts()) <
-                (best_afisa_sol.score() +
+            if ((solution.score_wvcp() + penalty_coeff * solution.nb_conflicts()) <
+                (best_afisa_sol.score_wvcp() +
                  penalty_coeff * best_afisa_sol.nb_conflicts())) {
                 best_afisa_sol = solution;
             }
 
-            if (solution.score() == Parameters::p->target) {
+            if (solution.score_wvcp() == Parameters::p->target) {
                 return;
             }
         }

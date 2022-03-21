@@ -5,39 +5,25 @@
 void greedy_random(Solution &solution) {
     for (int vertex{solution.free_vertices().back()}; vertex < Graph::g->nb_vertices;
          ++vertex) {
-        std::vector<int> possible_colors;
-        for (const int &color : solution.non_empty_colors()) {
-            if (solution.conflicts_colors(color, vertex) == 0) {
-                possible_colors.emplace_back(color);
-            }
-        }
-        // add -1 to have the possibility to open a new color even its not needed
+        auto possible_colors{solution.available_colors(vertex)};
+        // add -1 to have the possibility to open a new color even if not needed
         possible_colors.emplace_back(-1);
-        solution.add_vertex_to_color(vertex, rd::get_random_value(possible_colors));
-    }
-}
-
-void greedy_deterministic(Solution &solution) {
-    for (int vertex{solution.free_vertices().back()}; vertex < Graph::g->nb_vertices;
-         ++vertex) {
-        solution.add_vertex_to_color(vertex, solution.first_available_color(vertex));
+        solution.add_to_color(vertex, rd::choice(possible_colors));
     }
 }
 
 void greedy_constrained(Solution &solution) {
     for (int vertex{solution.free_vertices().back()}; vertex < Graph::g->nb_vertices;
          ++vertex) {
-        std::vector<int> possible_colors;
-        for (const int &color : solution.non_empty_colors()) {
-            if (solution.conflicts_colors(color, vertex) == 0) {
-                possible_colors.emplace_back(color);
-            }
-        }
-        if (possible_colors.empty()) {
-            solution.add_vertex_to_color(vertex, -1);
-        } else {
-            solution.add_vertex_to_color(vertex, rd::get_random_value(possible_colors));
-        }
+        auto possible_colors{solution.available_colors(vertex)};
+        solution.add_to_color(vertex, rd::choice(possible_colors));
+    }
+}
+
+void greedy_deterministic(Solution &solution) {
+    for (int vertex{solution.free_vertices().back()}; vertex < Graph::g->nb_vertices;
+         ++vertex) {
+        solution.add_to_color(vertex, solution.first_available_color(vertex));
     }
 }
 

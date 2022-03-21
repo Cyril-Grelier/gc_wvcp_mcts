@@ -35,7 +35,7 @@ def get_target(instance: str):
 with open("all_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
-problem = "wvcp" # "wvcp" "gcp" # p, problem
+problem = "wvcp"  # "wvcp" "gcp" # p, problem
 method = "local_search"  # m,method
 
 time_limit = 3600  # t,time_limit
@@ -49,23 +49,23 @@ nb_iter_local_search = 9000000000000000000  # N,nb_iter_local_search
 max_time_local_search = time_limit  # M,max_time_local_search
 
 initializations = [
-    "random",
-    "constrained",
+    # "random",
+    # "constrained",
     "deterministic"
 ]  # I,initialization
 
 local_searchs = [
-    "none",
+    # "none",
     # "hill_climbing",
-    # "tabu_weight",
+    "tabu_weight",
     # "tabu_col",
     # "afisa",
     # "afisa_original",
-    # "redls",
-    # "ilsts",
+    "redls",
+    "ilsts",
 ]  # l,local_search
 
-output_directory = "output_greedy"
+output_directory = "output_local_search_solution_cleaned"
 
 os.mkdir(f"{output_directory}/")
 for local_search in local_searchs:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../representation/Solution.h"
+#include "../representation/ProxiSolutionRedLS.h"
 
 /**
  * @brief Local search from redLS
@@ -24,7 +24,9 @@ void redls(Solution &solution, const bool verbose = false);
  * @param best_local_score best score found in the local search
  * @return std::vector<Action> List of candidate moves in set 1
  */
-std::vector<Action> get_moves_CanSet1(Solution &solution, const int best_local_score);
+bool candidate_set_1(ProxiSolutionRedLS &solution,
+                     const int best_local_score,
+                     std::vector<bool> &tabu_list);
 
 /**
  * @brief Return candidate moves set 2 (RedLS)
@@ -33,7 +35,9 @@ std::vector<Action> get_moves_CanSet1(Solution &solution, const int best_local_s
  * @param withconf boolean flag indicating if the tabu list is activated
  * @return std::vector<Action> List of candidate moves in set 2
  */
-std::vector<Action> get_moves_CanSet2(Solution &solution, const bool withconf);
+bool candidate_set_2(ProxiSolutionRedLS &solution,
+                     const bool withconf,
+                     std::vector<bool> &tabu_list);
 
 /**
  * @brief Return candidate moves set 3 (RedLS)
@@ -42,7 +46,9 @@ std::vector<Action> get_moves_CanSet2(Solution &solution, const bool withconf);
  * @param best_local_score best score found in the local search
  * @return std::vector<Action> List of candidate moves in set 3
  */
-std::vector<Action> get_moves_CanSet3(Solution &solution, const int best_local_score);
+bool candidate_set_3(ProxiSolutionRedLS &solution,
+                     const int best_local_score,
+                     std::vector<bool> &tabu_list);
 
 /**
  * @brief Return list of moves selected by Rule 1 (RedLS)
@@ -50,7 +56,7 @@ std::vector<Action> get_moves_CanSet3(Solution &solution, const int best_local_s
  * @param solution solution to use, the solution will be modified
  * @return std::vector<Action> List of moves to apply
  */
-std::vector<Action> selectionRule1(Solution &solution);
+void selectionRule1(ProxiSolutionRedLS &solution);
 
 /**
  * @brief Return list of moves selected by Rule 2 (RedLS)
@@ -59,4 +65,6 @@ std::vector<Action> selectionRule1(Solution &solution);
  * @param best_local_score best score found in the local search
  * @return std::vector<Action> List of moves to apply
  */
-Action selectionRule2(Solution &solution, const int best_local_score);
+void selectionRule2(ProxiSolutionRedLS &solution,
+                    const int best_local_score,
+                    std::vector<bool> &tabu_list);

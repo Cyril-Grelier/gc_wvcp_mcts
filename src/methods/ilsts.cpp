@@ -7,33 +7,28 @@
 #include "../utils/utils.h"
 
 void ilsts(Solution &best_solution, const bool verbose) {
-    const int first_freeze_vertex{best_solution.get_rank_placed_vertices()};
-
-    if ((Graph::g->nb_vertices - first_freeze_vertex) < (Graph::g->nb_vertices * 0.20)) {
-        return;
-    }
 
     auto max_time{std::chrono::high_resolution_clock::now() +
                   std::chrono::seconds(Parameters::p->max_time_local_search)};
 
     int64_t best_time{0};
 
-    Solution working_solution(best_solution);
+    ProxiSolutionILSTS working_solution(best_solution);
     std::vector<long> tabu(Graph::g->nb_vertices, 0);
 
     long no_improve{0}; // number of iterations without improvement
-    int local_best{working_solution.score()};
+    int local_best{working_solution.score_wvcp()};
     long turn{0};
     int force{1}; // perturbation strength
 
     while (turn < Parameters::p->nb_iter_local_search and
            not Parameters::p->time_limit_reached_sub_method(max_time) and
-           best_solution.score() != Parameters::p->target) {
+           best_solution.score_wvcp() != Parameters::p->target) {
         ++turn;
-        Solution next_s(working_solution);
+        ProxiSolutionILSTS next_s(working_solution);
 
         // condition to stop for MCTS when no vertices can be unassigned
-        if (not next_s.unassigned_random_heavy_vertices(force, first_freeze_vertex)) {
+        if (not next_s.unassigned_random_heavy_vertices(force)) {
             return;
         }
 
@@ -67,12 +62,11 @@ void ilsts(Solution &best_solution, const bool verbose) {
             }
             break;
         }
-        if (next_s.get_score_maybe_unassigned() <
-            working_solution.get_score_maybe_unassigned()) {
+        if (next_s.get_score() < working_solution.get_score()) {
             no_improve = 1;
             working_solution = next_s;
-            if (local_best > next_s.get_score_maybe_unassigned()) {
-                local_best = next_s.get_score_maybe_unassigned();
+            if (local_best > next_s.get_score()) {
+                local_best = next_s.get_score();
             }
             force = 1;
         } else if (no_improve <= Graph::g->nb_vertices) {
@@ -83,44 +77,28 @@ void ilsts(Solution &best_solution, const bool verbose) {
                 ++force;
             }
         } else {
-            local_best = working_solution.get_score_maybe_unassigned();
+            local_best = working_solution.get_score();
             working_solution.perturb_vertices(1);
             no_improve = 1;
         }
 
         if ((not working_solution.has_unassigned_vertices()) and
-            (best_solution.score() > working_solution.score())) {
-            best_solution = working_solution;
+            (best_solution.score_wvcp() > working_solution.score_wvcp())) {
+            best_solution = working_solution.solution();
             if (verbose) {
                 best_time = Parameters::p->elapsed_time(
                     std::chrono::high_resolution_clock::now());
-                fmt::print(Parameters::p->output,
-                           "{},{},{},{},{},{},{}\n",
-                           get_date_str(),
-                           Parameters::p->local_search_str,
-                           Graph::g->name,
-                           Parameters::p->line_csv,
-                           turn,
-                           best_time,
-                           best_solution.line_csv());
+                print_result_ls(best_time, best_solution, turn);
             }
         }
     }
     if (verbose) {
-        fmt::print(Parameters::p->output,
-                   "{},{},{},{},{},{},{}\n",
-                   get_date_str(),
-                   Parameters::p->local_search_str,
-                   Graph::g->name,
-                   Parameters::p->line_csv,
-                   turn,
-                   best_time,
-                   best_solution.line_csv());
+        print_result_ls(best_time, best_solution, turn);
     }
 }
 
-bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu) {
-    const int delta{solution.unassigned_score() - solution.score()};
+bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu) {
+    const int delta{solution.unassigned_score() - solution.score_wvcp()};
     auto min_vertex{solution.unassigned()[0]};
     int min_cost{Graph::g->nb_vertices};
     int min_c = -1;
@@ -131,7 +109,7 @@ bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu) {
         for (const auto &color : non_empty_colors) {
             if (solution.conflicts_colors(color, vertex) == 0 and
                 delta > std::max(0, vertex_weight - solution.max_weight(color))) {
-                solution.add_vertex_to_color(vertex, color);
+                solution.add_to_color(vertex, color);
                 solution.remove_unassigned_vertex(vertex);
                 return true;
             }
@@ -161,15 +139,14 @@ bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu) {
                     for (int y : Graph::g->neighborhood[vertex]) {
                         if (solution.color(y) == neighbor_color) {
                             assert(solution.nb_free_colors(y) > 0);
-                            solution.delete_vertex_from_color(y);
+                            solution.delete_from_color(y);
                             unassigned.push_back(y);
                         }
                     }
 
-                    solution.add_vertex_to_color(vertex,
-                                                 solution.is_color_empty(neighbor_color)
-                                                     ? solution.add_new_color()
-                                                     : neighbor_color);
+                    solution.add_to_color(
+                        vertex,
+                        solution.is_color_empty(neighbor_color) ? -1 : neighbor_color);
 
                     solution.random_assignment_constrained(unassigned);
                     assert(unassigned.empty());
@@ -190,7 +167,7 @@ bool M_1_2_3(Solution &solution, const long iter, std::vector<long> &tabu) {
     return M_3(solution, iter, min_cost, min_vertex, min_c, tabu);
 }
 
-bool M_3(Solution &solution,
+bool M_3(ProxiSolutionILSTS &solution,
          const long iter,
          const int min_cost,
          const int vertex,
@@ -207,12 +184,11 @@ bool M_3(Solution &solution,
             } else {
                 solution.add_unassigned_vertex(y);
             }
-            solution.delete_vertex_from_color(y);
+            solution.delete_from_color(y);
         }
     }
 
-    solution.add_vertex_to_color(
-        vertex, solution.is_color_empty(min_c) ? solution.add_new_color() : min_c);
+    solution.add_to_color(vertex, solution.is_color_empty(min_c) ? -1 : min_c);
     tabu[vertex] = iter + static_cast<long>(solution.non_empty_colors().size());
     solution.random_assignment_constrained(unassigned);
     assert(unassigned.empty());
@@ -220,16 +196,16 @@ bool M_3(Solution &solution,
     return true;
 }
 
-bool M_4(Solution &solution,
+bool M_4(ProxiSolutionILSTS &solution,
          const long iter,
          const std::vector<int> &free_vertices,
          std::vector<long> &tabu) {
-    const long max_counter{solution.nb_non_empty_colors()};
+    const long max_counter{static_cast<long>(solution.non_empty_colors().size())};
     int counter = 0;
     for (const auto &v : free_vertices) {
         if (solution.nb_free_colors(v) > 0 and tabu[v] < iter and
             not Graph::g->neighborhood[v].empty() and solution.color(v) != -1) {
-            tabu[v] = iter + solution.nb_non_empty_colors();
+            tabu[v] = iter + static_cast<long>(solution.non_empty_colors().size());
             solution.random_assignment_constrained(v);
             ++counter;
             if (counter == max_counter) {
@@ -241,11 +217,11 @@ bool M_4(Solution &solution,
     return (counter > 0);
 }
 
-bool M_5(Solution &solution,
+bool M_5(ProxiSolutionILSTS &solution,
          const long iter,
          const std::vector<int> &free_vertices,
          std::vector<long> &tabu) {
-    const int delta{solution.unassigned_score() - solution.score()};
+    const int delta{solution.unassigned_score() - solution.score_wvcp()};
 
     for (const auto &v : free_vertices) {
         if (solution.nb_free_colors(v) == 0 and tabu[v] < iter and
@@ -266,17 +242,16 @@ bool M_5(Solution &solution,
                     for (const auto &y : Graph::g->neighborhood[v]) {
                         if (solution.color(y) == c_neighbor) {
                             if (solution.nb_free_colors(y) > 0) {
-                                solution.delete_vertex_from_color(y);
+                                solution.delete_from_color(y);
                                 unassigned.push_back(y);
                             }
                         }
                     }
-                    solution.delete_vertex_from_color(v);
-                    tabu[v] = iter + solution.nb_non_empty_colors();
-                    solution.add_vertex_to_color(v,
-                                                 solution.is_color_empty(c_neighbor)
-                                                     ? solution.add_new_color()
-                                                     : c_neighbor);
+                    solution.delete_from_color(v);
+                    tabu[v] =
+                        iter + static_cast<long>(solution.non_empty_colors().size());
+                    solution.add_to_color(
+                        v, solution.is_color_empty(c_neighbor) ? -1 : c_neighbor);
 
                     solution.random_assignment_constrained(unassigned);
                     return true;
@@ -287,12 +262,12 @@ bool M_5(Solution &solution,
     return false;
 }
 
-bool M_6(Solution &solution, const long iter, std::vector<long> &tabu) {
+bool M_6(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu) {
     int min_cost{Graph::g->nb_vertices};
     int min_cost_c = -1;
-    const int delta{solution.unassigned_score() - solution.score()};
+    const int delta{solution.unassigned_score() - solution.score_wvcp()};
 
-    const int v = rd::get_random_value(solution.unassigned());
+    const int v = rd::choice(solution.unassigned());
     std::vector<int> rellocated(solution.nb_colors(), 0);
     std::vector<int> costs(solution.nb_colors(), 0);
 
@@ -328,13 +303,13 @@ bool M_6(Solution &solution, const long iter, std::vector<long> &tabu) {
             } else {
                 solution.add_unassigned_vertex(y);
             }
-            solution.delete_vertex_from_color(y);
+            solution.delete_from_color(y);
         }
     }
-    tabu[v] = iter + solution.nb_non_empty_colors();
+    tabu[v] = iter + static_cast<long>(solution.non_empty_colors().size());
     if (solution.is_color_empty(min_cost_c))
-        min_cost_c = solution.add_new_color();
-    solution.add_vertex_to_color(v, min_cost_c);
+        min_cost_c = -1;
+    solution.add_to_color(v, min_cost_c);
 
     solution.random_assignment_constrained(unassigned);
     assert(unassigned.empty());
