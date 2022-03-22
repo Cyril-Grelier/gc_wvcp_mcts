@@ -19,7 +19,7 @@ void redls(Solution &best_solution, const bool verbose) {
            best_solution.score_wvcp() != Parameters::p->target) {
         ++turn;
         // Step 1 RedLS: ligne 4 - 11 algo 3
-        if (solution.nb_conflicts() == 0) {
+        if (solution.penalty() == 0) {
 
             while (candidate_set_2(solution, false, tabu_list)) {
                 assert(solution.check_solution());
@@ -218,7 +218,7 @@ void selectionRule2(ProxiSolutionRedLS &solution,
                     const int best_local_score,
                     std::vector<bool> &tabu_list) {
     const int delta_wvcp{best_local_score - solution.score_wvcp()};
-    Coloration best_action{-1, -1};
+    Coloration best_coloration{-1, -1};
     const auto &[v1, v2]{rd::choice(solution.conflict_edges())};
     int best_score_conflicts{0};
     for (const int &vertex : {v1, v2}) {
@@ -229,14 +229,14 @@ void selectionRule2(ProxiSolutionRedLS &solution,
             }
             int delta_conflicts_score = solution.delta_conflicts(vertex, color);
             if (delta_conflicts_score < best_score_conflicts or
-                best_action.vertex == -1) {
+                best_coloration.vertex == -1) {
                 best_score_conflicts = delta_conflicts_score;
-                best_action = Coloration{vertex, color};
+                best_coloration = Coloration{vertex, color};
             }
         }
     }
 
-    if (best_action.vertex == -1) {
+    if (best_coloration.vertex == -1) {
         const std::vector<int> edges = {v1, v2};
         const int vertex = rd::choice(edges);
         std::vector<int> possible_colors{-1};
@@ -247,10 +247,10 @@ void selectionRule2(ProxiSolutionRedLS &solution,
         }
         const int color{rd::choice(possible_colors)};
 
-        best_action = Coloration{vertex, color};
+        best_coloration = Coloration{vertex, color};
     }
 
-    solution.delete_from_color(best_action.vertex);
-    solution.add_to_color(best_action.vertex, best_action.color);
-    tabu_list[best_action.vertex] = true;
+    solution.delete_from_color(best_coloration.vertex);
+    solution.add_to_color(best_coloration.vertex, best_coloration.color);
+    tabu_list[best_coloration.vertex] = true;
 }

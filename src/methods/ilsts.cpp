@@ -17,7 +17,6 @@ void ilsts(Solution &best_solution, const bool verbose) {
     std::vector<long> tabu(Graph::g->nb_vertices, 0);
 
     long no_improve{0}; // number of iterations without improvement
-    int local_best{working_solution.score_wvcp()};
     long turn{0};
     int force{1}; // perturbation strength
 
@@ -65,9 +64,6 @@ void ilsts(Solution &best_solution, const bool verbose) {
         if (next_s.get_score() < working_solution.get_score()) {
             no_improve = 1;
             working_solution = next_s;
-            if (local_best > next_s.get_score()) {
-                local_best = next_s.get_score();
-            }
             force = 1;
         } else if (no_improve <= Graph::g->nb_vertices) {
             ++no_improve;
@@ -77,7 +73,6 @@ void ilsts(Solution &best_solution, const bool verbose) {
                 ++force;
             }
         } else {
-            local_best = working_solution.get_score();
             working_solution.perturb_vertices(1);
             no_improve = 1;
         }
@@ -99,9 +94,9 @@ void ilsts(Solution &best_solution, const bool verbose) {
 
 bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu) {
     const int delta{solution.unassigned_score() - solution.score_wvcp()};
-    auto min_vertex{solution.unassigned()[0]};
+    int min_vertex{-1};
     int min_cost{Graph::g->nb_vertices};
-    int min_c = -1;
+    int min_color = -1;
     std::vector<int> non_empty_colors = solution.non_empty_colors();
     shuffle(non_empty_colors.begin(), non_empty_colors.end(), rd::generator);
     for (const auto &vertex : solution.unassigned()) {
@@ -118,67 +113,68 @@ bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &t
         std::vector<int> costs(solution.nb_colors(), 0);
         std::vector<int> rellocated(solution.nb_colors(), 0);
         for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
-            const int neighbor_color = solution.color(neighbor);
+            int neighbor_color = solution.color(neighbor);
             if (neighbor_color == -1) {
                 continue;
             }
-            if (delta >
+            if (delta <=
                 std::max(0, vertex_weight - solution.max_weight(neighbor_color))) {
+                continue;
+            }
 
-                if (solution.nb_free_colors(neighbor) > 0) {
-                    ++rellocated[neighbor_color];
-                } else if (tabu[neighbor] < iter) {
-                    ++rellocated[neighbor_color];
-                    ++costs[neighbor_color];
-                }
+            if (solution.nb_free_colors(neighbor) > 0) {
+                ++rellocated[neighbor_color];
+            } else if (tabu[neighbor] < iter) {
+                ++rellocated[neighbor_color];
+                ++costs[neighbor_color];
+            }
 
-                if (rellocated[neighbor_color] ==
-                        solution.conflicts_colors(neighbor_color, vertex) and
-                    costs[neighbor_color] == 0) {
-                    std::vector<int> unassigned;
-                    for (int y : Graph::g->neighborhood[vertex]) {
-                        if (solution.color(y) == neighbor_color) {
-                            assert(solution.nb_free_colors(y) > 0);
-                            solution.delete_from_color(y);
-                            unassigned.push_back(y);
-                        }
+            if (rellocated[neighbor_color] ==
+                    solution.conflicts_colors(neighbor_color, vertex) and
+                costs[neighbor_color] == 0) {
+                std::vector<int> unassigned;
+                for (int y : Graph::g->neighborhood[vertex]) {
+                    if (solution.color(y) == neighbor_color) {
+                        assert(solution.nb_free_colors(y) > 0);
+                        solution.delete_from_color(y);
+                        unassigned.push_back(y);
                     }
-
-                    solution.add_to_color(
-                        vertex,
-                        solution.is_color_empty(neighbor_color) ? -1 : neighbor_color);
-
-                    solution.random_assignment_constrained(unassigned);
-                    assert(unassigned.empty());
-                    solution.remove_unassigned_vertex(vertex);
-                    return true;
                 }
-                if (rellocated[neighbor_color] ==
-                        solution.conflicts_colors(neighbor_color, vertex) and
-                    costs[neighbor_color] == 1 and min_cost > costs[neighbor_color]) {
-                    min_cost = costs[neighbor_color];
-                    min_c = neighbor_color;
-                    min_vertex = vertex;
+                if (solution.is_color_empty(neighbor_color)) {
+                    neighbor_color = -1;
                 }
+                solution.add_to_color(vertex, neighbor_color);
+
+                solution.random_assignment_constrained(unassigned);
+                assert(unassigned.empty());
+                solution.remove_unassigned_vertex(vertex);
+                return true;
+            }
+            if (rellocated[neighbor_color] ==
+                    solution.conflicts_colors(neighbor_color, vertex) and
+                costs[neighbor_color] == 1 and min_cost > costs[neighbor_color]) {
+                min_cost = costs[neighbor_color];
+                min_color = neighbor_color;
+                min_vertex = vertex;
             }
         }
     }
 
-    return M_3(solution, iter, min_cost, min_vertex, min_c, tabu);
+    return M_3(solution, iter, min_cost, min_vertex, min_color, tabu);
 }
 
 bool M_3(ProxiSolutionILSTS &solution,
          const long iter,
          const int min_cost,
          const int vertex,
-         const int min_c,
+         const int min_color,
          std::vector<long> &tabu) {
     if (min_cost != 1) {
         return false;
     }
     std::vector<int> unassigned;
     for (const auto &y : Graph::g->neighborhood[vertex]) {
-        if (solution.color(y) == min_c) {
+        if (solution.color(y) == min_color) {
             if (solution.nb_free_colors(y) > 0) {
                 unassigned.push_back(y);
             } else {
@@ -188,7 +184,7 @@ bool M_3(ProxiSolutionILSTS &solution,
         }
     }
 
-    solution.add_to_color(vertex, solution.is_color_empty(min_c) ? -1 : min_c);
+    solution.add_to_color(vertex, solution.is_color_empty(min_color) ? -1 : min_color);
     tabu[vertex] = iter + static_cast<long>(solution.non_empty_colors().size());
     solution.random_assignment_constrained(unassigned);
     assert(unassigned.empty());
@@ -204,7 +200,7 @@ bool M_4(ProxiSolutionILSTS &solution,
     int counter = 0;
     for (const auto &v : free_vertices) {
         if (solution.nb_free_colors(v) > 0 and tabu[v] < iter and
-            not Graph::g->neighborhood[v].empty() and solution.color(v) != -1) {
+            solution.color(v) != -1) {
             tabu[v] = iter + static_cast<long>(solution.non_empty_colors().size());
             solution.random_assignment_constrained(v);
             ++counter;
@@ -223,39 +219,41 @@ bool M_5(ProxiSolutionILSTS &solution,
          std::vector<long> &tabu) {
     const int delta{solution.unassigned_score() - solution.score_wvcp()};
 
-    for (const auto &v : free_vertices) {
-        if (solution.nb_free_colors(v) == 0 and tabu[v] < iter and
-            not Graph::g->neighborhood[v].empty() and solution.color(v) != -1) {
-            std::vector<int> rellocated(solution.nb_colors(), 0);
-            for (const auto &neighbor : Graph::g->neighborhood[v]) {
-                int c_neighbor = solution.color(neighbor);
-                if (c_neighbor == -1)
-                    continue;
-                if (delta >
-                    std::max(0, Graph::g->weights[v] - solution.max_weight(c_neighbor))) {
-                    if (solution.nb_free_colors(neighbor) > 0) {
-                        ++rellocated[c_neighbor];
+    for (const auto &vertex : free_vertices) {
+        if (not(solution.nb_free_colors(vertex) == 0 and tabu[vertex] < iter and
+                not Graph::g->neighborhood[vertex].empty() and
+                solution.color(vertex) != -1)) {
+            continue;
+        }
+        std::vector<int> rellocated(solution.nb_colors(), 0);
+        for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
+            int c_neighbor = solution.color(neighbor);
+            if (c_neighbor == -1)
+                continue;
+            if (delta >
+                std::max(0,
+                         Graph::g->weights[vertex] - solution.max_weight(c_neighbor))) {
+                if (solution.nb_free_colors(neighbor) > 0) {
+                    ++rellocated[c_neighbor];
+                }
+            }
+            if (rellocated[c_neighbor] == solution.conflicts_colors(c_neighbor, vertex)) {
+                std::vector<int> unassigned;
+                for (const auto &y : Graph::g->neighborhood[vertex]) {
+                    if (solution.color(y) == c_neighbor and
+                        solution.nb_free_colors(y) > 0) {
+                        solution.delete_from_color(y);
+                        unassigned.push_back(y);
                     }
                 }
-                if (rellocated[c_neighbor] == solution.conflicts_colors(c_neighbor, v)) {
-                    std::vector<int> unassigned;
-                    for (const auto &y : Graph::g->neighborhood[v]) {
-                        if (solution.color(y) == c_neighbor) {
-                            if (solution.nb_free_colors(y) > 0) {
-                                solution.delete_from_color(y);
-                                unassigned.push_back(y);
-                            }
-                        }
-                    }
-                    solution.delete_from_color(v);
-                    tabu[v] =
-                        iter + static_cast<long>(solution.non_empty_colors().size());
-                    solution.add_to_color(
-                        v, solution.is_color_empty(c_neighbor) ? -1 : c_neighbor);
+                solution.delete_from_color(vertex);
+                tabu[vertex] =
+                    iter + static_cast<long>(solution.non_empty_colors().size());
+                solution.add_to_color(
+                    vertex, solution.is_color_empty(c_neighbor) ? -1 : c_neighbor);
 
-                    solution.random_assignment_constrained(unassigned);
-                    return true;
-                }
+                solution.random_assignment_constrained(unassigned);
+                return true;
             }
         }
     }

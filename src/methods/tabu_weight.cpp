@@ -18,11 +18,12 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
         ++turn;
         std::vector<Action> best_actions;
         int best_evaluation{std::numeric_limits<int>::max()};
+        auto possible_colors{solution.non_empty_colors()};
+        possible_colors.push_back(-1);
         for (const auto &vertex : solution.free_vertices()) {
-            for (int color{0}; color < solution.nb_colors() + 1; ++color) {
+            for (const int &color : possible_colors) {
                 if (color == solution.color(vertex) or
-                    (color < solution.nb_colors() and
-                     solution.conflicts_colors(color, vertex) != 0)) {
+                    (color != -1 and solution.conflicts_colors(color, vertex) != 0)) {
                     continue;
                 }
                 const int test_score{solution.score_wvcp() +

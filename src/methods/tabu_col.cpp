@@ -25,14 +25,15 @@ void tabu_col(Solution &best_solution, const bool verbose) {
         ++turn_main;
 
         if (working_solution.nb_non_empty_colors() == Solution::best_nb_colors and
-            working_solution.nb_conflicts() == 0) {
-            working_solution.reduce_nb_colors(Solution::best_nb_colors - 1);
+            working_solution.penalty() == 0) {
+            reduce_nb_colors(working_solution, Solution::best_nb_colors - 1);
         } else {
-            working_solution.reduce_nb_colors(
-                static_cast<int>(working_solution.nb_non_empty_colors()) - 1);
+            reduce_nb_colors(working_solution,
+                             static_cast<int>(working_solution.nb_non_empty_colors()) -
+                                 1);
         }
 
-        int best_nb_conflicts{working_solution.nb_conflicts()};
+        int best_nb_conflicts{working_solution.penalty()};
 
         std::vector<std::vector<int>> tabu_matrix(
             Graph::g->nb_vertices, std::vector<int>(working_solution.nb_colors(), 0));
@@ -52,15 +53,14 @@ void tabu_col(Solution &best_solution, const bool verbose) {
                             working_solution.delta_conflicts(vertex, color)};
                         if ((test_conflict < best_evaluation and
                              tabu_matrix[vertex][color] <= turn) or
-                            (working_solution.nb_conflicts() + test_conflict == 0)) {
+                            (working_solution.penalty() + test_conflict == 0)) {
                             best_actions.clear();
                             best_actions.emplace_back(
                                 std::pair<int, int>({vertex, color}));
                             best_evaluation = test_conflict;
                         } else if ((test_conflict == best_evaluation and
                                     tabu_matrix[vertex][color] <= turn) or
-                                   (working_solution.nb_conflicts() + test_conflict ==
-                                    0)) {
+                                   (working_solution.penalty() + test_conflict == 0)) {
                             best_actions.emplace_back(
                                 std::pair<int, int>({vertex, color}));
                         }
@@ -73,9 +73,9 @@ void tabu_col(Solution &best_solution, const bool verbose) {
                 working_solution.add_to_color(chosen_one.first, chosen_one.second);
                 tabu_matrix[chosen_one.first][old_color] =
                     static_cast<int>(turn) + distribution(rd::generator) +
-                    static_cast<int>(working_solution.nb_conflicts() * 0.6);
-                if (working_solution.nb_conflicts() < best_nb_conflicts) {
-                    best_nb_conflicts = working_solution.nb_conflicts();
+                    static_cast<int>(working_solution.penalty() * 0.6);
+                if (working_solution.penalty() < best_nb_conflicts) {
+                    best_nb_conflicts = working_solution.penalty();
                     if (verbose) {
                         print_result_ls(Parameters::p->elapsed_time(
                                             std::chrono::high_resolution_clock::now()),
@@ -86,7 +86,7 @@ void tabu_col(Solution &best_solution, const bool verbose) {
             }
         }
 
-        if (working_solution.nb_conflicts() == 0) {
+        if (working_solution.penalty() == 0) {
             best_solution = working_solution;
             if (working_solution.nb_non_empty_colors() < Solution::best_nb_colors) {
                 Solution::best_nb_colors =
@@ -101,5 +101,28 @@ void tabu_col(Solution &best_solution, const bool verbose) {
     }
     if (verbose) {
         print_result_ls(best_time, best_solution, turn_main);
+    }
+}
+
+void reduce_nb_colors(Solution &solution, const int nb_total_color) {
+    assert(nb_total_color < solution.nb_colors());
+    std::vector<int> to_delete;
+    for (int color{nb_total_color}; color < solution.nb_colors(); ++color) {
+        const auto &vertices{solution.colors_vertices(color)};
+        to_delete.insert(to_delete.end(), vertices.begin(), vertices.end());
+    }
+    for (const auto &vertex : to_delete) {
+        solution.delete_from_color(vertex);
+    }
+    std::stable_sort(to_delete.begin(), to_delete.end());
+    for (const auto &vertex : to_delete) {
+        int min_col{0};
+        for (const auto &color : solution.non_empty_colors()) {
+            if (solution.conflicts_colors(color, vertex) <
+                solution.conflicts_colors(min_col, vertex)) {
+                min_col = color;
+            }
+        }
+        solution.add_to_color(vertex, min_col);
     }
 }

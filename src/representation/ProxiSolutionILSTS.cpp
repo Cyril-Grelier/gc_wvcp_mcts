@@ -5,7 +5,9 @@
 #include "../utils/random_generator.h"
 
 ProxiSolutionILSTS::ProxiSolutionILSTS(Solution solution)
-    : _solution(solution), _nb_free_colors(Graph::g->nb_vertices, 0) {
+    : _solution(solution),
+      _nb_free_colors(Graph::g->nb_vertices, 0),
+      _unassigned_score(solution.score_wvcp()) {
     for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
         for (int color{0}; color < _solution.nb_colors(); ++color) {
             if (_solution.conflicts_colors(color, vertex) == 0 and
@@ -44,7 +46,6 @@ bool ProxiSolutionILSTS::check_solution() const {
     return _solution.check_solution();
 }
 
-//
 int ProxiSolutionILSTS::add_to_color(const int vertex, const int color_proposed) {
 
     const int old_max_weight = _solution.max_weight(color_proposed);
@@ -81,7 +82,6 @@ int ProxiSolutionILSTS::add_to_color(const int vertex, const int color_proposed)
     return color;
 }
 
-//
 int ProxiSolutionILSTS::delete_from_color(const int vertex) {
 
     const int old_weight{max_weight(_solution.color(vertex))};
@@ -147,7 +147,6 @@ bool ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
         }
 
         const int color{rd::choice(possible_colors)};
-
         const int old_max_weight = max_weight(color);
 
         std::vector<int> to_unassign;
@@ -178,13 +177,12 @@ void ProxiSolutionILSTS::perturb_vertices(const int force) {
     std::uniform_int_distribution<int> distribution_c(0, _solution.nb_colors() - 1);
 
     for (int i = 0; i < force; ++i) {
-        int color;
-        int vertex;
-        do {
+        int vertex{0};
+        int color{_solution.color(vertex)};
+        while (_solution.color(vertex) == color) {
             vertex = distribution_v(rd::generator);
-            color = distribution_c(rd::generator);
-        } while (Graph::g->neighborhood[vertex].empty() or
-                 _solution.color(vertex) == color or _solution.is_color_empty(color));
+            color = rd::choice(_solution.non_empty_colors());
+        }
 
         delete_from_color(vertex);
 
@@ -231,7 +229,7 @@ bool ProxiSolutionILSTS::random_assignment_constrained(const int vertex) {
         }
     }
 
-    if (_solution.color(vertex) != -1) {
+    if (vertex_color != -1) {
         delete_from_color(vertex);
     }
 

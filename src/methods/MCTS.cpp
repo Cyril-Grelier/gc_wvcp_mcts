@@ -181,7 +181,12 @@ void fit(Solution &solution,
          const local_search_ptr &local_search,
          SimulationHelper &helper) {
     if (solution.score_wvcp() <= (helper.fit_condition + 1)) {
-        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+        if (std::all_of(helper.past_solutions.begin(),
+                        helper.past_solutions.end(),
+                        [solution](Solution sol) {
+                            return distance_approximation(sol, solution) >
+                                   Graph::g->nb_vertices / 10;
+                        })) {
             helper.past_solutions.push_back(solution);
             helper.fit_condition = std::min(solution.score_wvcp(), helper.fit_condition);
             local_search(solution, false);
@@ -195,7 +200,12 @@ void depth(Solution &solution,
     std::uniform_int_distribution<int> distribution(0, 100);
     if ((solution.first_free_vertex() * 100) / Graph::g->nb_vertices >=
         distribution(rd::generator)) {
-        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+        if (std::all_of(helper.past_solutions.begin(),
+                        helper.past_solutions.end(),
+                        [solution](Solution sol) {
+                            return distance_approximation(sol, solution) >
+                                   Graph::g->nb_vertices / 10;
+                        })) {
             helper.past_solutions.push_back(solution);
             local_search(solution, false);
         }
@@ -209,7 +219,12 @@ void depth_fit(Solution &solution,
     if (solution.score_wvcp() <= (helper.fit_condition + 1) and
         (solution.first_free_vertex() * 100) / Graph::g->nb_vertices <=
             distribution(rd::generator)) {
-        if (ok_distance(solution, helper.past_solutions, Graph::g->nb_vertices / 10)) {
+        if (std::all_of(helper.past_solutions.begin(),
+                        helper.past_solutions.end(),
+                        [solution](Solution sol) {
+                            return distance_approximation(sol, solution) >
+                                   Graph::g->nb_vertices / 10;
+                        })) {
             helper.past_solutions.push_back(solution);
             helper.fit_condition = std::min(solution.score_wvcp(), helper.fit_condition);
             local_search(solution, false);

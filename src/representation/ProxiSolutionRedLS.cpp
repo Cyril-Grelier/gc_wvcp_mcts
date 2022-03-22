@@ -11,7 +11,7 @@ ProxiSolutionRedLS::ProxiSolutionRedLS(Solution solution)
         _edge_weights[v1][v2] = 1;
         _edge_weights[v2][v1] = 1;
     }
-};
+}
 
 int ProxiSolutionRedLS::add_to_color(const int vertex, const int proposed_color) {
     const int color{_solution.add_to_color(vertex, proposed_color)};
@@ -20,22 +20,18 @@ int ProxiSolutionRedLS::add_to_color(const int vertex, const int proposed_color)
     }
 
     if (_conflicts_colors[color][vertex] > 0) {
-        // Update conflict score
-        _nb_conflicts += _conflicts_colors[color][vertex];
-
+        // Update penalty
+        _penalty += _conflicts_colors[color][vertex];
         for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
             if (_solution.color(neighbor) == color) {
                 const int lower{std::min(neighbor, vertex)};
                 const int higher{std::max(neighbor, vertex)};
                 _conflict_edges.emplace_back(std::make_tuple(lower, higher));
-                // _conflict_edges.emplace_back(std::make_tuple(neighbor, vertex));
-                // _conflict_edges.emplace_back(std::make_tuple(vertex, neighbor));
             }
         }
     }
-    // update conflicts and free colors for neighbors
+    // update conflicts for neighbors
     for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
-        //++_conflicts_colors[color][neighbor];
         _conflicts_colors[color][neighbor] += _edge_weights[vertex][neighbor];
     }
 
@@ -47,7 +43,7 @@ int ProxiSolutionRedLS::delete_from_color(const int vertex) {
 
     // Update nb of conflicts and list of conflicting edges
     if (_conflicts_colors[color][vertex] > 0) {
-        _nb_conflicts -= _conflicts_colors[color][vertex];
+        _penalty -= _conflicts_colors[color][vertex];
         for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
             if (_solution.color(neighbor) == color) {
                 const int lower{std::min(neighbor, vertex)};
@@ -80,7 +76,7 @@ void ProxiSolutionRedLS::increment_edge_weights() {
         ++_conflicts_colors[_solution.color(edge1)][edge2];
         ++_conflicts_colors[_solution.color(edge2)][edge1];
     }
-    _nb_conflicts += static_cast<int>(_conflict_edges.size());
+    _penalty += static_cast<int>(_conflict_edges.size());
 }
 
 bool ProxiSolutionRedLS::check_solution() const {
@@ -115,8 +111,8 @@ bool ProxiSolutionRedLS::check_solution() const {
     return _conflicts_colors[color][vertex];
 }
 
-[[nodiscard]] int ProxiSolutionRedLS::nb_conflicts() const {
-    return _nb_conflicts;
+[[nodiscard]] int ProxiSolutionRedLS::penalty() const {
+    return _penalty;
 }
 
 [[nodiscard]] std::vector<std::tuple<int, int>>

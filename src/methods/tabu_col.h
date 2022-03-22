@@ -24,3 +24,10 @@
  * @param verbose True if print csv line each time new best scores is found
  */
 void tabu_col(Solution &solution, const bool verbose = false);
+
+/**
+ * @brief Close colors and push unassigned vertices other colors and create conflicts
+ *
+ * @param nb_total_color Number of color the solution will have
+ */
+void reduce_nb_colors(Solution &solution, const int nb_total_color);

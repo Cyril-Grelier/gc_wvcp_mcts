@@ -39,7 +39,7 @@ void afisa_original(Solution &best_solution, const bool verbose) {
 
         // if new best score found
         if (best_afisa_sol.score_wvcp() < best_solution.score_wvcp() and
-            best_afisa_sol.nb_conflicts() == 0) {
+            best_afisa_sol.penalty() == 0) {
             best_solution = best_afisa_sol;
             no_improvement = 0;
             perturbation = small_perturbation;
@@ -56,7 +56,7 @@ void afisa_original(Solution &best_solution, const bool verbose) {
         }
 
         // adaptive adjusment
-        if (best_afisa_sol.nb_conflicts() != 0) {
+        if (best_afisa_sol.penalty() != 0) {
             ++penalty_coeff;
         } else {
             --penalty_coeff;
@@ -98,34 +98,34 @@ void afisa_original_tabu(Solution &solution,
         turn_tabu++;
         std::vector<Action> best_actions;
         int best_evaluation{std::numeric_limits<int>::max()};
+
+        auto possible_colors{solution.non_empty_colors()};
+        possible_colors.push_back(-1);
+
         for (const auto &vertex : solution.free_vertices()) {
-            for (int color{0}; color < nb_max_colors; ++color) {
-                if (color == solution.color(vertex) or color >= solution.nb_colors()) {
+            for (const int &color : possible_colors) {
+                if (color == solution.color(vertex)) {
                     continue;
                 }
                 // penalty is
                 // - penalty from current position if the vertex move to a new color
                 // new penalty - penalty from current position otherwise
-                const int delta_penalty{
-                    solution.nb_colors() == color
-                        ? -solution.conflicts_colors(solution.color(vertex), vertex)
-                        : solution.conflicts_colors(color, vertex) -
-                              solution.conflicts_colors(solution.color(vertex), vertex)};
+                const int delta_penalty{solution.delta_conflicts(vertex, color)};
                 const int test_score{
                     solution.score_wvcp() + solution.delta_wvcp_score(vertex, color) +
-                    penalty_coeff * (delta_penalty + solution.nb_conflicts())};
+                    penalty_coeff * (delta_penalty + solution.penalty())};
                 // save best moves
                 if ((test_score < best_evaluation and
                      tabu_matrix[vertex][color] <= turn_tabu) or
                     (test_score < best_solution.score_wvcp() and
-                     (solution.nb_conflicts() + delta_penalty == 0))) {
+                     (solution.penalty() + delta_penalty == 0))) {
                     best_actions.clear();
                     best_actions.emplace_back(Action{vertex, color, test_score});
                     best_evaluation = test_score;
                 } else if (test_score == best_evaluation and
                            (tabu_matrix[vertex][color] <= turn_tabu or
                             (test_score < best_solution.score_wvcp() and
-                             (solution.nb_conflicts() + delta_penalty == 0)))) {
+                             (solution.penalty() + delta_penalty == 0)))) {
                     best_actions.emplace_back(Action{vertex, color, test_score});
                 }
             }
@@ -135,18 +135,15 @@ void afisa_original_tabu(Solution &solution,
         if (not best_actions.empty()) {
             const Action chosen_one{rd::choice(best_actions)};
             const int old_color{solution.delete_from_color(chosen_one.vertex)};
-            if (solution.is_color_empty(chosen_one.color)) {
-                solution.add_to_color(chosen_one.vertex, -1);
-            } else {
-                solution.add_to_color(chosen_one.vertex, chosen_one.color);
-            }
+            solution.add_to_color(chosen_one.vertex, chosen_one.color);
+
             // set tabu
             switch (perturbation) {
             case Perturbation::no_perturbation:
                 tabu_matrix[chosen_one.vertex][old_color] =
                     static_cast<int>(turn_tabu) + distribution(rd::generator) +
                     static_cast<int>(solution.score_wvcp() +
-                                     penalty_coeff * solution.nb_conflicts() * 0.6);
+                                     penalty_coeff * solution.penalty() * 0.6);
                 break;
             case Perturbation::unlimited:
                 tabu_matrix[chosen_one.vertex][old_color] = turns + 1;
@@ -155,9 +152,9 @@ void afisa_original_tabu(Solution &solution,
                 break;
             }
 
-            if ((solution.score_wvcp() + penalty_coeff * solution.nb_conflicts()) <
+            if ((solution.score_wvcp() + penalty_coeff * solution.penalty()) <
                 (best_afisa_sol.score_wvcp() +
-                 penalty_coeff * best_afisa_sol.nb_conflicts())) {
+                 penalty_coeff * best_afisa_sol.penalty())) {
                 best_afisa_sol = solution;
             }
 

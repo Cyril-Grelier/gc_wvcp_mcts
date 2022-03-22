@@ -43,7 +43,7 @@ bool M_3(ProxiSolutionILSTS &solution,
          const long iter,
          const int min_cost,
          const int vertex,
-         const int min_c,
+         const int min_color,
          std::vector<long> &tabu);
 
 /**

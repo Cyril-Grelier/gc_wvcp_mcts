@@ -45,14 +45,7 @@ class Solution {
     int _score_wvcp{0};
 
     /** @brief number of conflicts in the current solution*/
-    int _nb_conflicts{0};
-
-    /**
-     * @brief Gives a new empty color, add prepare all structures
-     *
-     * @return int the new color
-     */
-    [[nodiscard]] int add_new_color();
+    int _penalty{0};
 
   public:
     /**
@@ -74,11 +67,10 @@ class Solution {
      * with the color
      *
      * @param vertex the verter to color
-     * @param color the color to use
-     * @return int the color used (may be different from the given color if the color was
-     * empty)
+     * @param color the color to use (-1 to ask for a new color)
+     * @return int the color used
      */
-    int add_to_color(const int vertex, const int color_proposed);
+    int add_to_color(const int vertex, int color);
 
     /**
      * @brief Remove color of a vertex
@@ -100,14 +92,6 @@ class Solution {
     [[nodiscard]] std::vector<int> available_colors(const int &vertex) const;
 
     /**
-     * @brief Check the validity of the solution
-     *
-     * @return true the solution is valid
-     * @return false the solution is invalid
-     */
-    bool check_solution() const;
-
-    /**
      * @brief Compute the difference on the score if the vertex is colored with the color
      *
      * @param vertex the vertex to color
@@ -125,18 +109,58 @@ class Solution {
     [[nodiscard]] int delta_wvcp_score_old_color(const int vertex) const;
 
     /**
-     * @brief Gives the score of the solution
+     * @brief Compute the difference on the conflicts if the vertex is colored with the
+     * color
      *
-     * @return int the score
+     * @param vertex the vertex to use
+     * @param color the color to use
+     * @return int the difference on the number of conflicts
      */
-    [[nodiscard]] int score_wvcp() const;
+    [[nodiscard]] int delta_conflicts(const int vertex, const int color) const;
+
+    int pop_first_free_vertex();
+
+    void shuffle_non_empty_color();
 
     /**
-     * @brief Get the number of the last placed vertex
+     * @brief Check the validity of the solution
      *
-     * @return int the number of the last placed vertex
+     * @return true the solution is valid
+     * @return false the solution is invalid
      */
-    [[nodiscard]] int first_free_vertex() const;
+    bool check_solution() const;
+
+    /**
+     * @brief Return max weight of the color
+     *
+     * @param color the color
+     * @return int the max weight
+     */
+    [[nodiscard]] int max_weight(const int &color) const;
+
+    /**
+     * @brief Return whether the vertex has conflict or not
+     *
+     * @param vertex the vertex
+     * @return true there is conflicts
+     * @return false there is no conflicts
+     */
+    [[nodiscard]] bool has_conflicts(const int vertex) const;
+
+    /**
+     * @brief Return true if the color is empty
+     *
+     * @return true no vertex in the color
+     * @return false vertex in the color
+     */
+    [[nodiscard]] bool is_color_empty(const int color) const;
+
+    /**
+     * @brief Return the solution in csv format
+     *
+     * @return std::string the solution in csv format
+     */
+    [[nodiscard]] std::string line_csv() const;
 
     /**
      * @brief Return the colors of the vertices
@@ -146,18 +170,12 @@ class Solution {
     [[nodiscard]] const std::vector<int> &colors() const;
 
     /**
-     * @brief Get the number of non_empty colors
+     * @brief Return the color of a vertex
      *
-     * @return long number of colors currently used
+     * @param vertex the vertex
+     * @return int the color of the vertex
      */
-    [[nodiscard]] long nb_non_empty_colors() const;
-
-    /**
-     * @brief Return non empty colors
-     *
-     * @return const std::vector<int>& non empty colors
-     */
-    [[nodiscard]] const std::vector<int> &non_empty_colors() const;
+    [[nodiscard]] int color(const int &vertex) const;
 
     /**
      * @brief Return number of colors
@@ -174,62 +192,25 @@ class Solution {
     [[nodiscard]] const std::vector<int> &free_vertices() const;
 
     /**
+     * @brief Gives the score of the solution
+     *
+     * @return int the score
+     */
+    [[nodiscard]] int score_wvcp() const;
+
+    /**
+     * @brief Return number of conflicts between vertices
+     *
+     * @return int penalty
+     */
+    [[nodiscard]] int penalty() const;
+
+    /**
      * @brief return the number of conflicts on the color for the vertex
      *
      * @return int number of conflicts
      */
     [[nodiscard]] int conflicts_colors(const int &color, const int &vertex) const;
-
-    /**
-     * @brief Return number of conflicts
-     *
-     * @return int number of conflicts
-     */
-    [[nodiscard]] int nb_conflicts() const;
-
-    /**
-     * @brief Return whether the vertex has conflict or not
-     *
-     * @param vertex the vertex
-     * @return true there is conflicts
-     * @return false there is no conflicts
-     */
-    [[nodiscard]] bool has_conflicts(const int vertex) const;
-
-    /**
-     * @brief Compute the difference on the conflicts if the vertex is colored with the
-     * color
-     *
-     * @param vertex the vertex to use
-     * @param color the color to use
-     * @return int the difference on the number of conflicts
-     */
-    [[nodiscard]] int delta_conflicts(const int vertex, const int color) const;
-
-    int pop_first_free_vertex();
-
-    /**
-     * @brief Close colors and push unassigned vertices other colors and create conflicts
-     *
-     * @param nb_total_color Number of color the solution will have
-     */
-    void reduce_nb_colors(const int nb_total_color);
-
-    /**
-     * @brief Return number of vertices per color
-     *
-     * @param nb_colors_max the vector size will be of size nb_color_max
-     * @return std::vector<int> number of vertices per color
-     */
-    [[nodiscard]] std::vector<int> nb_vertices_per_color(const int nb_colors_max) const;
-
-    /**
-     * @brief Return the color of a vertex
-     *
-     * @param vertex the vertex
-     * @return int the color of the vertex
-     */
-    [[nodiscard]] int color(const int &vertex) const;
 
     /**
      * @brief Return vertices in given color
@@ -240,38 +221,42 @@ class Solution {
     [[nodiscard]] const std::vector<int> &colors_vertices(const int &color) const;
 
     /**
+     * @brief Return non empty colors
+     *
+     * @return const std::vector<int>& non empty colors
+     */
+    [[nodiscard]] const std::vector<int> &non_empty_colors() const;
+
+    /**
+     * @brief Get the number of the last placed vertex
+     *
+     * @return int the number of the last placed vertex
+     */
+    [[nodiscard]] int first_free_vertex() const;
+
+    /**
+     * @brief Get the number of non_empty colors
+     *
+     * @return long number of colors currently used
+     */
+    [[nodiscard]] long nb_non_empty_colors() const;
+
+    /**
+     * @brief Return number of vertices per color
+     *
+     * @param nb_colors_max the vector size will be of size nb_color_max
+     * @return std::vector<int> number of vertices per color
+     */
+    [[nodiscard]] std::vector<int> nb_vertices_per_color(const int nb_colors_max) const;
+
+    /**
      * @brief Return colors weights
      *
      * @return const std::vector<std::vector<int>>& colors_weights of the solution
      */
     [[nodiscard]] const std::vector<std::vector<int>> &colors_weights() const;
 
-    /**
-     * @brief Return max weight of the color
-     *
-     * @param color the color
-     * @return int the max weight
-     */
-    [[nodiscard]] int max_weight(const int &color) const;
-
-    /**
-     * @brief Return true if the color is empty
-     *
-     * @return true no vertex in the color
-     * @return false vertex in the color
-     */
-    [[nodiscard]] bool is_color_empty(const int color) const;
-
     [[nodiscard]] const std::vector<std::vector<int>> &conflicts_colors() const;
-
-    void shuffle_non_empty_color();
-
-    /**
-     * @brief Return the solution in csv format
-     *
-     * @return std::string the solution in csv format
-     */
-    [[nodiscard]] std::string line_csv() const;
 };
 
 /**
@@ -291,17 +276,3 @@ class Solution {
  * @return int distance
  */
 [[nodiscard]] int distance(const Solution &sol1, const Solution &sol2);
-
-/**
- * @brief Check if the solution is at least at a distance (approximation) of distance_max
- * from other solutions
- *
- * @param current_solution solution to check
- * @param past_solutions other solutions
- * @param distance_max max distance
- * @return true it is
- * @return false it is not
- */
-[[nodiscard]] bool ok_distance(const Solution &current_solution,
-                               const std::vector<Solution> &past_solutions,
-                               const int distance_max);

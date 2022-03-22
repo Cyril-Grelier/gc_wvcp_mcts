@@ -13,7 +13,7 @@ class ProxiSolutionRedLS {
     /** @brief the current solution*/
     Solution _solution;
     /** @brief number of conflicts in the current solution*/
-    int _nb_conflicts{0};
+    int _penalty{0};
 
     /** @brief For each color, for each vertex, number of neighbors in the color*/
     std::vector<std::vector<int>> _conflicts_colors{};
@@ -39,7 +39,7 @@ class ProxiSolutionRedLS {
 
     [[nodiscard]] int conflicts_colors(const int &color, const int &vertex) const;
 
-    [[nodiscard]] int nb_conflicts() const;
+    [[nodiscard]] int penalty() const;
 
     [[nodiscard]] std::vector<std::tuple<int, int>> conflict_edges() const;
 

@@ -13,8 +13,8 @@ class ProxiSolutionILSTS {
     /** @brief the current solution*/
     Solution _solution;
 
-    /** @brief For each vertex, number of color the vertex can take without increasing the
-     * score*/
+    /** @brief For each vertex,
+     * number of color the vertex can take without increasing the score*/
     std::vector<int> _nb_free_colors{};
     /** @brief WVCP Score when some vertices are unassigned*/
     int _unassigned_score{0};
