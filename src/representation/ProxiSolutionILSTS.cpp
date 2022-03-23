@@ -18,7 +18,7 @@ ProxiSolutionILSTS::ProxiSolutionILSTS(Solution solution)
             }
         }
     }
-};
+}
 
 bool ProxiSolutionILSTS::check_solution() const {
     for (const auto &v : _unassigned) {
