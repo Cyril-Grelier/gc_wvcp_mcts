@@ -87,7 +87,7 @@ void afisa_original_tabu(Solution &solution,
                          const long &turns,
                          const Perturbation &perturbation,
                          const std::chrono::high_resolution_clock::time_point &max_time) {
-    const int nb_max_colors{static_cast<int>(std::max(solution.nb_colors(), 14) * 1.10)};
+    const int nb_max_colors{static_cast<int>(std::max(solution.nb_colors(), 15) * 1.15)};
     std::vector<std::vector<long>> tabu_matrix(Graph::g->nb_vertices,
                                                std::vector<long>(nb_max_colors, 0));
     std::uniform_int_distribution<int> distribution(0, 10);
@@ -100,7 +100,9 @@ void afisa_original_tabu(Solution &solution,
         int best_evaluation{std::numeric_limits<int>::max()};
 
         auto possible_colors{solution.non_empty_colors()};
-        possible_colors.push_back(-1);
+        if (static_cast<int>(possible_colors.size()) < nb_max_colors) {
+            possible_colors.push_back(-1);
+        }
 
         for (const auto &vertex : solution.free_vertices()) {
             for (const int &color : possible_colors) {
