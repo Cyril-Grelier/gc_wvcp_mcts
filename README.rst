@@ -10,6 +10,7 @@ This problem is an variant of the Graph Coloring Problem. Given a weighted graph
 This project is coded in C++ for the calculation part and in Python for the data analysis. This work is related to the article :
 
 Cyril Grelier, Olivier Goudet, Jin-Kao Hao. On monte carlo tree search for weighted vertex voloring. Proceedings of the 22nd European Conference on Evolutionary Computation in Combinatorial Optimization (EvoCOP 2022), 20-22 April, 2022, Lecture Notes in Computer Science 13222, pages 1-16.
+https://link.springer.com/chapter/10.1007/978-3-031-04148-8_1
 
 pre-print version : https://arxiv.org/abs/2202.01665
 
