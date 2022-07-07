@@ -20,7 +20,6 @@ void redls(Solution &best_solution, const bool verbose) {
         ++turn;
         // Step 1 RedLS: ligne 4 - 11 algo 3
         if (solution.penalty() == 0) {
-
             while (candidate_set_2(solution, false, tabu_list)) {
                 assert(solution.check_solution());
             }
@@ -38,6 +37,8 @@ void redls(Solution &best_solution, const bool verbose) {
                     }
                     return;
                 }
+            } else if (solution.score_wvcp() == best_solution.score_wvcp()) {
+                best_solution = solution.solution();
             }
             std::fill(tabu_list.begin(), tabu_list.end(), false);
             selectionRule1(solution);
@@ -109,11 +110,11 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
 }
 
 bool candidate_set_2(ProxiSolutionRedLS &solution,
-                     const bool withconf,
+                     const bool with_conf,
                      std::vector<bool> &tabu_list) {
     std::vector<Coloration> best_colorations;
     for (const auto &vertex : solution.free_vertices()) {
-        if (withconf and tabu_list[vertex]) {
+        if (with_conf and tabu_list[vertex]) {
             continue;
         }
         for (const auto &color : solution.non_empty_colors()) {
@@ -134,7 +135,7 @@ bool candidate_set_2(ProxiSolutionRedLS &solution,
     solution.delete_from_color(chosen_one.vertex);
     solution.add_to_color(chosen_one.vertex, chosen_one.color);
 
-    if (withconf) {
+    if (with_conf) {
         tabu_list[chosen_one.vertex] = true;
     }
 

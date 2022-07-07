@@ -164,7 +164,7 @@ class Node {
     [[nodiscard]] bool fully_explored() const;
 
     /**
-     * @brief Get a string represanting the tree from the root node
+     * @brief Get a string representing the tree from the root node
      *
      * @return std::string the tree in string format
      */

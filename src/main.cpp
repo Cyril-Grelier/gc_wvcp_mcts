@@ -73,7 +73,12 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
         options.allow_unrecognised_options().add_options()(
             "p,problem",
             "problem (gcp, wvcp)",
-            cxxopts::value<std::string>()->default_value("wvcp"));
+            cxxopts::value<std::string>()->default_value(
+                //
+                "wvcp"
+                // "gcp"
+                //
+                ));
 
         options.allow_unrecognised_options().add_options()(
             "i,instance",
@@ -81,7 +86,16 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             cxxopts::value<std::string>()->default_value(
                 //
                 // "p42"
-                "queen10_10"
+                // "queen10_10"
+                // "DSJC125.1gb"
+                // "zeroin.i.3"
+                // "DSJC500.5"
+                "DSJC250.5"
+                // "DSJC500.9"
+                // "wap01a"
+                // "C2000.9"
+                // "DSJC250.5"
+                // "r1000.5"
                 //
                 ));
 
@@ -110,7 +124,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "if the target score is reach, the search is stopped",
             cxxopts::value<int>()->default_value("0"));
 
-        const std::string time_limit{"3600"};
+        // const std::string time_limit{"3600"};
+        const std::string time_limit{"18000"};
         options.allow_unrecognised_options().add_options()(
             "t,time_limit",
             "maximum execution time in seconds",
@@ -128,8 +143,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             cxxopts::value<std::string>()->default_value(
                 //
                 // "random"
-                // "constrained"
-                "deterministic"
+                "constrained"
+                // "deterministic"
                 //
                 ));
 
@@ -247,24 +262,26 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
         if (problem != "wvcp" and problem != "gcp") {
             fmt::print(stderr,
                        "unknown problem {}\n"
-                       "select : wvcp, gcp",
+                       "select :\n"
+                       "\twvcp (Weighted Vertex Coloring Problem)\n"
+                       "\tgcp (Graph Coloring Problem)",
                        problem);
             exit(1);
         }
 
         // init graph
-        Graph::init_graph(
-            load_graph(result["instance"].as<std::string>(), problem == "wvcp"));
+        Graph::init_graph(result["instance"].as<std::string>(), problem);
 
         const int max_time_local_search{
             result["max_time_local_search"].as<int>() == -1
-                ? static_cast<int>(static_cast<double>(Graph::g->nb_vertices) *
-                                   result["P_time"].as<double>()) +
-                      result["O_time"].as<int>()
+                ? std::max(1,
+                           static_cast<int>(static_cast<double>(Graph::g->nb_vertices) *
+                                            result["P_time"].as<double>()) +
+                               result["O_time"].as<int>())
                 : result["max_time_local_search"].as<int>()};
 
         // init parameters
-        Parameters::init_parameters(
+        Parameters::p =
             std::make_unique<Parameters>(result["problem"].as<std::string>(),
                                          result["method"].as<std::string>(),
                                          result["time_limit"].as<int>(),
@@ -276,7 +293,7 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
                                          max_time_local_search,
                                          result["local_search"].as<std::string>(),
                                          result["simulation"].as<std::string>(),
-                                         result["coeff_exploi_explo"].as<double>()));
+                                         result["coeff_exploi_explo"].as<double>());
 
         // set output file if needed
         const std::string output_file{result["ouput_to_file"].as<std::string>()};

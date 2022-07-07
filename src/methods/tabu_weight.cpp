@@ -52,6 +52,8 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
                         std::chrono::high_resolution_clock::now());
                     print_result_ls(best_time, best_solution, turn);
                 }
+            } else if (solution.score_wvcp() == best_solution.score_wvcp()) {
+                best_solution = solution;
             }
         }
     }

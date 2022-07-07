@@ -9,6 +9,7 @@
 
 int Solution::best_score_wvcp = std::numeric_limits<int>::max();
 int Solution::best_nb_colors = std::numeric_limits<int>::max();
+int Solution::max_nb_colors = 0;
 
 const std::string Solution::header_csv = "nb_colors,penalty,score,solution";
 
@@ -31,7 +32,7 @@ int Solution::add_to_color(const int vertex, int color) {
             // create a new color if needed
             _conflicts_colors.emplace_back(Graph::g->nb_vertices, 0);
             _colors_vertices.emplace_back();
-            _colors_weights.emplace_back();
+            _heaviest_weight.emplace_back(0);
             _non_empty_colors.push_back(_nb_colors);
             color = _nb_colors;
             ++_nb_colors;
@@ -49,14 +50,17 @@ int Solution::add_to_color(const int vertex, int color) {
     // update conflicts for neighbors
     for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
         ++_conflicts_colors[color][neighbor];
+        // if there is a new edge in conflict
+        if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
+            ++_nb_conflicting_vertices;
+        }
     }
 
     const int old_max_weight = max_weight(color);
     const int vertex_weight = Graph::g->weights[vertex];
 
-    // update weights and vertices for the color class
-    insert_sorted(_colors_weights[color], vertex_weight);
-    insert_sorted(_colors_vertices[color], vertex);
+    // update vertices for the color class
+    _colors_vertices[color].insert(vertex);
 
     // update colors
     _colors[vertex] = color;
@@ -64,6 +68,7 @@ int Solution::add_to_color(const int vertex, int color) {
     // update score if the vertex increase the class weight
     if (vertex_weight > old_max_weight) {
         _score_wvcp += (vertex_weight - old_max_weight);
+        _heaviest_weight[color] = vertex_weight;
     }
 
     return color;
@@ -79,20 +84,28 @@ int Solution::delete_from_color(const int vertex) {
 
     // update conflicts for neighbors
     for (const int neighbor : Graph::g->neighborhood[vertex]) {
+        if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
+            --_nb_conflicting_vertices;
+        }
         --_conflicts_colors[color][neighbor];
     }
 
     // update wvcp score
-    _score_wvcp += delta_wvcp_score_old_color(vertex);
+    const int delta_score{delta_wvcp_score_old_color(vertex)};
+
+    _score_wvcp += delta_score;
+
+    if (delta_score != 0) {
+        _heaviest_weight[color] = second_max_weight(color);
+    }
 
     // remove from color group
-    erase_sorted(_colors_weights[color], Graph::g->weights[vertex]);
-    erase_sorted(_colors_vertices[color], vertex);
+    _colors_vertices[color].erase(vertex);
 
     _colors[vertex] = -1;
 
     // delete color if needed
-    if (_colors_weights[color].empty()) {
+    if (_colors_vertices[color].empty()) {
         const auto it =
             std::find(_non_empty_colors.begin(), _non_empty_colors.end(), color);
         _non_empty_colors[std::distance(_non_empty_colors.begin(), it)] =
@@ -130,13 +143,13 @@ int Solution::delete_from_color(const int vertex) {
     const int color = _colors[vertex];
     const int vertex_weight = Graph::g->weights[vertex];
     // if the vertex was the only one in the color
-    if (_colors_weights[color].size() == 1) {
+    if (_colors_vertices[color].size() == 1) {
         return -vertex_weight;
     }
     // if the vertex is the heaviest one and the second heaviest is lighter
-    if (vertex_weight == max_weight(color) and
-        _colors_weights[color].end()[-2] < vertex_weight) {
-        return _colors_weights[color].end()[-2] - vertex_weight;
+    const int second_max{second_max_weight(color)};
+    if (vertex_weight == max_weight(color) and second_max < vertex_weight) {
+        return second_max - vertex_weight;
     }
     // else
     return 0;
@@ -195,7 +208,7 @@ bool Solution::check_solution() const {
     }
 
     for (int color = 0; color < _nb_colors; ++color) {
-        if (_colors_weights[color].empty())
+        if (_colors_vertices[color].empty())
             continue;
 
         assert(max_weight(color) == max_colors_weights[color]);
@@ -205,7 +218,8 @@ bool Solution::check_solution() const {
     for (const int &color : _empty_colors) {
         (void)color;
         assert(max_colors_weights[color] == 0);
-        assert(_colors_weights[color].empty());
+        assert(_heaviest_weight[color] == 0);
+        assert(_colors_vertices[color].empty());
     }
 
     assert(score == _score_wvcp);
@@ -213,10 +227,17 @@ bool Solution::check_solution() const {
 }
 
 [[nodiscard]] int Solution::max_weight(const int &color) const {
-    if (color == -1 or color >= _nb_colors or _colors_weights[color].empty()) {
+    if (color == -1 or color >= _nb_colors) {
         return 0;
     }
-    return _colors_weights[color].back();
+    return _heaviest_weight[color];
+}
+
+[[nodiscard]] int Solution::second_max_weight(const int &color) const {
+    if (color == -1 or color >= _nb_colors or _colors_vertices[color].size() <= 1) {
+        return 0;
+    }
+    return Graph::g->weights[*(++_colors_vertices[color].begin())];
 }
 
 [[nodiscard]] bool Solution::has_conflicts(const int vertex) const {
@@ -263,7 +284,7 @@ bool Solution::check_solution() const {
     return _conflicts_colors[color][vertex];
 }
 
-[[nodiscard]] const std::vector<int> &Solution::colors_vertices(const int &color) const {
+[[nodiscard]] const std::set<int> &Solution::colors_vertices(const int &color) const {
     return _colors_vertices[color];
 }
 
@@ -287,11 +308,17 @@ Solution::nb_vertices_per_color(const int nb_colors_max) const {
     }
     return nb_colors_per_col;
 }
-
-[[nodiscard]] const std::vector<std::vector<int>> &Solution::colors_weights() const {
-    return _colors_weights;
+[[nodiscard]] std::vector<std::vector<int>> Solution::weights() const {
+    std::vector<std::vector<int>> weights(_nb_colors);
+    for (int color{0}; color < _nb_colors; ++color) {
+        const auto &vertices{_colors_vertices[color]};
+        weights[color].reserve(vertices.size());
+        for (const auto &vertex : vertices) {
+            weights[color].emplace_back(Graph::g->weights[vertex]);
+        }
+    }
+    return weights;
 }
-
 [[nodiscard]] const std::vector<std::vector<int>> &Solution::conflicts_colors() const {
     return _conflicts_colors;
 }

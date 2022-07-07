@@ -27,15 +27,24 @@ void greedy_deterministic(Solution &solution) {
     }
 }
 
-init_ptr get_initialization_fct(const Initialization &initialization) {
-    switch (initialization) {
-    case Initialization::random:
-        return greedy_random;
-    case Initialization::constrained:
-        return greedy_constrained;
-    case Initialization::deterministic:
-        return greedy_deterministic;
-    default:
-        return nullptr;
+void greedy_worst(Solution &solution) {
+    for (int vertex{solution.free_vertices().back()}; vertex < Graph::g->nb_vertices;
+         ++vertex) {
+        solution.add_to_color(vertex, -1);
     }
+}
+
+init_ptr get_initialization_fct(const std::string &initialization) {
+    if (initialization == "random")
+        return greedy_random;
+    if (initialization == "constrained")
+        return greedy_constrained;
+    if (initialization == "deterministic")
+        return greedy_deterministic;
+    if (initialization == "worst")
+        return greedy_worst;
+    fmt::print(stderr,
+               "Unknown initialization, please select : "
+               "random, constrained, deterministic, worst\n");
+    exit(1);
 }

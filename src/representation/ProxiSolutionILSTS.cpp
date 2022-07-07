@@ -202,7 +202,7 @@ void ProxiSolutionILSTS::perturb_vertices(const int force) {
         std::random_shuffle(unassigned.begin(), unassigned.end());
 
         std::vector<int> to_random;
-        // assigned without inceasing score
+        // assigned without increasing score
         for (const int &v : unassigned) {
             if (not random_assignment_constrained(v)) {
                 to_random.emplace_back(v);

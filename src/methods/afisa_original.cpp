@@ -49,13 +49,18 @@ void afisa_original(Solution &best_solution, const bool verbose) {
                 print_result_ls(best_time, best_solution, turn_afisa);
             }
         } else {
+            // if this is a new best solution with the same score
+            if (best_afisa_sol.score_wvcp() == best_solution.score_wvcp() and
+                best_afisa_sol.penalty() == 0) {
+                best_solution = best_afisa_sol;
+            }
             no_improvement++;
             if (no_improvement == 50) {
                 perturbation = large_perturbation;
             }
         }
 
-        // adaptive adjusment
+        // adaptive adjustment
         if (best_afisa_sol.penalty() != 0) {
             ++penalty_coeff;
         } else {

@@ -38,8 +38,13 @@ struct Graph {
     /** @brief For each vertex, its weight*/
     const std::vector<int> weights;
 
-    /** @brief Set the Graph for the search*/
-    static void init_graph(std::unique_ptr<const Graph> graph_);
+    /**
+     * @brief Init the graph for the search with the reduced version of it
+     *
+     * @param instance_name graph to load
+     * @param problem type of problem (gcp,wvcp)
+     */
+    static void init_graph(const std::string &instance_name, const std::string problem);
 
     /**
      * @brief Construct a new Graph
@@ -70,14 +75,3 @@ struct Graph {
      */
     Graph(const Graph &other) = delete;
 };
-
-/**
- * Load graph previously reduced from a _r.col file from the
- * instances/wvcp_reduced/ directory
- *
- * @param instance_name : name of the instance (without the .col extension)
- * @param wvcp_problem : true if wvcp problem, false if gcp problem
- * @return : shared ptr to the Graph
- */
-const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
-                                              const bool wvcp_problem);

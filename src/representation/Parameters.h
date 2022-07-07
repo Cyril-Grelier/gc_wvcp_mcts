@@ -12,7 +12,7 @@
  */
 struct Parameters {
 
-    /** @brief The parameters of the search, refer as Parameters::p*/
+    /** @brief The parameters of the search*/
     static std::unique_ptr<Parameters> p;
 
     /** @brief Time of the beginning of the search*/
@@ -29,16 +29,16 @@ struct Parameters {
     /** @brief Number of iteration maximum for the MCTS*/
     const long nb_max_iterations;
 
-    /** @brief Type of initialization of the solutions*/
-    const Initialization initialization;
+    /** @brief Type of initialization for local search*/
+    const std::string initialization;
 
     /** @brief Number of iteration for the local search*/
     const long nb_iter_local_search;
     /** @brief Maximum time for a run of local search*/
     const int max_time_local_search;
 
-    /** @brief Local search (any method)*/
-    const std::vector<Local_search> local_search;
+    /** @brief Name of the local_search*/
+    const std::string local_search;
 
     // MCTS
 
@@ -51,9 +51,6 @@ struct Parameters {
     std::string header_csv{};
     /** @brief Line of data for csv representation*/
     std::string line_csv{};
-
-    /** @brief Local_search for printing*/
-    const std::string local_search_str;
 
     /** @brief Output, stdout if console (set in utils/parsing.cpp*/
     std::FILE *output = stdout;
@@ -76,10 +73,10 @@ struct Parameters {
                         const int &rand_seed_,
                         const int &target_,
                         const long &nb_max_iterations_,
-                        const std::string &initialization_str_,
+                        const std::string &initialization_,
                         const long &nb_iter_local_search_,
                         const int &max_time_local_search_,
-                        const std::string &local_search_str_,
+                        const std::string &local_search_,
                         const std::string &simulation_,
                         const double &coeff_exploi_explo_);
 

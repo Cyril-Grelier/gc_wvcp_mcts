@@ -9,48 +9,23 @@
 
 std::unique_ptr<const Graph> Graph::g = nullptr;
 
-void Graph::init_graph(std::unique_ptr<const Graph> graph_) {
-    Graph::g = std::move(graph_);
-}
-
-Graph::Graph(const std::string &name_,
-             const int &nb_vertices_,
-             const int &nb_edges_,
-             const std::vector<std::pair<int, int>> &edges_list_,
-             const std::vector<std::vector<bool>> &adjacency_matrix_,
-             const std::vector<std::vector<int>> &neighborhood_,
-             const std::vector<int> &degrees_,
-             const std::vector<int> &weights_)
-    : name(name_),
-      nb_vertices(nb_vertices_),
-      nb_edges(nb_edges_),
-      edges_list(edges_list_),
-      adjacency_matrix(adjacency_matrix_),
-      neighborhood(neighborhood_),
-      degrees(degrees_),
-      weights(weights_) {
-}
-
-const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
-                                              const bool wvcp_problem) {
+void Graph::init_graph(const std::string &instance_name, const std::string problem) {
     // load the edges and vertices of the graph
     std::ifstream file;
-    if (wvcp_problem) {
-        file.open("../instances/wvcp_reduced/" + instance_name + ".col");
-    } else {
-        file.open("../instances/wvcp_original/" + instance_name + ".col");
-    }
+    file.open("../instances/" + problem + "_reduced/" + instance_name + ".col");
+
     if (!file) {
         fmt::print(stderr,
-                   "Didn't find {} in ../instances/wvcp_reduced/ or wvcp_original (if "
-                   "problem == gcp)\n"
+                   "Didn't find {} in ../instances/{}_reduced/ or "
+                   "../instances/gcp_reduced/ (if problem == gcp)\n"
                    "Did you run \n\n"
                    "git submodule init\n"
                    "git submodule update\n\n"
                    "before executing the program ?(import instances)\n"
                    "Otherwise check that you are in the build "
                    "directory before executing the program\n",
-                   instance_name);
+                   instance_name,
+                   problem);
         exit(1);
     }
     int nb_vertices{0}, nb_edges{0}, n1{0}, n2{0};
@@ -73,7 +48,7 @@ const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
 
     std::vector<int> weights(nb_vertices, 1);
 
-    if (wvcp_problem) {
+    if (problem == "wvcp") {
         // load the weights of the vertices
         std::ifstream w_file("../instances/wvcp_reduced/" + instance_name + ".col.w");
         if (!w_file) {
@@ -119,12 +94,30 @@ const std::unique_ptr<const Graph> load_graph(const std::string &instance_name,
     //         weights[vertex], degrees[vertex]);
     //     }
     // }
-    return std::make_unique<Graph>(instance_name,
-                                   nb_vertices,
-                                   nb_edges,
-                                   edges_list,
-                                   adjacency_matrix,
-                                   neighborhood,
-                                   degrees,
-                                   weights);
+    Graph::g = std::make_unique<Graph>(instance_name,
+                                       nb_vertices,
+                                       nb_edges,
+                                       edges_list,
+                                       adjacency_matrix,
+                                       neighborhood,
+                                       degrees,
+                                       weights);
+}
+
+Graph::Graph(const std::string &name_,
+             const int &nb_vertices_,
+             const int &nb_edges_,
+             const std::vector<std::pair<int, int>> &edges_list_,
+             const std::vector<std::vector<bool>> &adjacency_matrix_,
+             const std::vector<std::vector<int>> &neighborhood_,
+             const std::vector<int> &degrees_,
+             const std::vector<int> &weights_)
+    : name(name_),
+      nb_vertices(nb_vertices_),
+      nb_edges(nb_edges_),
+      edges_list(edges_list_),
+      adjacency_matrix(adjacency_matrix_),
+      neighborhood(neighborhood_),
+      degrees(degrees_),
+      weights(weights_) {
 }

@@ -27,7 +27,7 @@ MCTS::MCTS()
       _current_solution(_base_solution),
       _turn{0},
       _initialization(get_initialization_fct(Parameters::p->initialization)),
-      _local_search(get_local_search_fct(Parameters::p->local_search[0])),
+      _local_search(get_local_search_fct(Parameters::p->local_search)),
       _simulation(get_simulation_fct(Parameters::p->simulation)) {
 
     // Creation of the base solution and root node

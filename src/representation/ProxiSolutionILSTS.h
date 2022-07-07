@@ -33,7 +33,7 @@ class ProxiSolutionILSTS {
      * if the vertex is already colored, the vertex is uncolored before colored
      * with the color
      *
-     * @param vertex the verter to color
+     * @param vertex the vertex to color
      * @param color the color to use
      * @return int the color used (may be different from the given color if the color was
      * empty)

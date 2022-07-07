@@ -16,8 +16,8 @@
  * reduce the number of conflict to 0.
  *
  * Here, the solution have no limit on the number of color.
- * So we will empty some colors and randomly add the unasigned vertices to other colors to
- * increase the number of conflicts on the edges. Then once a solution is found, reduce
+ * So we will empty some colors and randomly add the unassigned vertices to other colors
+ * to increase the number of conflicts on the edges. Then once a solution is found, reduce
  * the number of colors again and reduce the number of conflict again and again...
  *
  * @param solution solution to use, the solution will be modified

@@ -2,11 +2,9 @@
 
 #include <cstdio>
 
-std::unique_ptr<Parameters> Parameters::p = nullptr;
+#include "../utils/utils.h"
 
-void Parameters::init_parameters(std::unique_ptr<Parameters> parameters_) {
-    Parameters::p = std::move(parameters_);
-}
+std::unique_ptr<Parameters> Parameters::p = nullptr;
 
 Parameters::Parameters(const std::string &problem,
                        const std::string &method,
@@ -14,10 +12,10 @@ Parameters::Parameters(const std::string &problem,
                        const int &rand_seed_,
                        const int &target_,
                        const long &nb_max_iterations_,
-                       const std::string &initialization_str_,
+                       const std::string &initialization_,
                        const long &nb_iter_local_search_,
                        const int &max_time_local_search_,
-                       const std::string &local_search_str_,
+                       const std::string &local_search_,
                        const std::string &simulation_,
                        const double &coeff_exploi_explo_)
     : time_start(std::chrono::high_resolution_clock::now()),
@@ -26,22 +24,22 @@ Parameters::Parameters(const std::string &problem,
       rand_seed(rand_seed_),
       target(target_),
       nb_max_iterations(nb_max_iterations_),
-      initialization(string_to_initialization(initialization_str_)),
+      initialization(initialization_),
       nb_iter_local_search(nb_iter_local_search_),
       max_time_local_search(max_time_local_search_),
-      local_search(string_to_vector_local_search(local_search_str_)),
+      local_search(local_search_),
       simulation(simulation_),
-      coeff_exploi_explo(coeff_exploi_explo_),
-      local_search_str(local_search_str_) {
+      coeff_exploi_explo(coeff_exploi_explo_) {
     if (method == "local_search") {
-        header_csv = "problem,time_limit,rand_seed,target,initialization,"
-                     "nb_iter_local_search,max_time_local_search";
+        header_csv = "problem,time_limit,rand_seed,"
+                     "target,initialization,nb_iter_local_search,"
+                     "max_time_local_search";
         line_csv = fmt::format("{},{},{},{},{},{},{}",
                                problem,
                                time_limit,
                                rand_seed,
                                target,
-                               initialization_str_,
+                               initialization_,
                                nb_iter_local_search,
                                max_time_local_search);
     } else if (method == "mcts") {
@@ -57,10 +55,10 @@ Parameters::Parameters(const std::string &problem,
                                nb_max_iterations,
                                nb_iter_local_search,
                                max_time_local_search,
-                               initialization_str_,
+                               initialization_,
                                simulation_,
                                coeff_exploi_explo,
-                               local_search_str_);
+                               local_search_);
     } else {
         fmt::print(stderr,
                    "Unknown method, please select : "

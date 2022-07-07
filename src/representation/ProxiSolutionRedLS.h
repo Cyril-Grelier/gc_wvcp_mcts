@@ -59,7 +59,7 @@ class ProxiSolutionRedLS {
 
     [[nodiscard]] bool has_conflicts(const int vertex) const;
 
-    [[nodiscard]] const std::vector<int> &colors_vertices(const int &color) const;
+    [[nodiscard]] const std::set<int> &colors_vertices(const int &color) const;
 
     [[nodiscard]] int max_weight(const int &color) const;
 };

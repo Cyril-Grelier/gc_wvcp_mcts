@@ -32,11 +32,11 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
  * @brief Return candidate moves set 2 (RedLS)
  *
  * @param solution solution to use, the solution will be modified
- * @param withconf boolean flag indicating if the tabu list is activated
+ * @param with_conf boolean flag indicating if the tabu list is activated
  * @return std::vector<Action> List of candidate moves in set 2
  */
 bool candidate_set_2(ProxiSolutionRedLS &solution,
-                     const bool withconf,
+                     const bool with_conf,
                      std::vector<bool> &tabu_list);
 
 /**

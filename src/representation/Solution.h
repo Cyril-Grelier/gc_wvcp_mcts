@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <tuple>
 
 #include "Graph.h"
@@ -16,22 +17,23 @@ class Solution {
     static int best_score_wvcp;
     /** @brief Minimal nb of color found (you have to update it)*/
     static int best_nb_colors;
+    /** @brief Max number of color for fixed nb_colors methods (you have to update it) */
+    static int max_nb_colors;
     /** @brief Header csv*/
     const static std::string header_csv;
 
   private:
     /** @brief For each vertex, its color*/
     std::vector<int> _colors{};
-    /** @brief For each color, list of the vertices colored with the color, sorted*/
-    std::vector<std::vector<int>> _colors_vertices{};
-    /** @brief For each color, list of the weights of the vertices colored with the color,
-     * sorted*/
-    std::vector<std::vector<int>> _colors_weights{};
+    /** @brief For each color, set of the vertices colored with the color*/
+    std::vector<std::set<int>> _colors_vertices{};
+    /** @brief For each color, the heaviest weight*/
+    std::vector<int> _heaviest_weight{};
 
     /** @brief For each color, for each vertex, number of neighbors in the color*/
     std::vector<std::vector<int>> _conflicts_colors{};
 
-    /** @brief number of openned colors (not automaticaly all used)*/
+    /** @brief number of opened colors (not automaticaly all used)*/
     int _nb_colors{0};
     /** @brief List of used colors*/
     std::vector<int> _non_empty_colors{};
@@ -44,8 +46,10 @@ class Solution {
     /** @brief WVCP score*/
     int _score_wvcp{0};
 
-    /** @brief number of conflicts in the current solution*/
+    /** @brief number of conflicts in the current solution (conflicting edges)*/
     int _penalty{0};
+    /** @brief number of conflicting vertices*/
+    int _nb_conflicting_vertices{0};
 
   public:
     /**
@@ -66,7 +70,7 @@ class Solution {
      * if the vertex is already colored, the vertex is uncolored before colored
      * with the color
      *
-     * @param vertex the verter to color
+     * @param vertex the vertex to color
      * @param color the color to use (-1 to ask for a new color)
      * @return int the color used
      */
@@ -137,6 +141,14 @@ class Solution {
      * @return int the max weight
      */
     [[nodiscard]] int max_weight(const int &color) const;
+
+    /**
+     * @brief Return the second max weight of the color
+     *
+     * @param color the color
+     * @return int the second max weight
+     */
+    [[nodiscard]] int second_max_weight(const int &color) const;
 
     /**
      * @brief Return whether the vertex has conflict or not
@@ -216,9 +228,9 @@ class Solution {
      * @brief Return vertices in given color
      *
      * @param color given color
-     * @return std::vector<int> vertices in the color
+     * @return std::set<int> vertices in the color
      */
-    [[nodiscard]] const std::vector<int> &colors_vertices(const int &color) const;
+    [[nodiscard]] const std::set<int> &colors_vertices(const int &color) const;
 
     /**
      * @brief Return non empty colors
@@ -250,11 +262,11 @@ class Solution {
     [[nodiscard]] std::vector<int> nb_vertices_per_color(const int nb_colors_max) const;
 
     /**
-     * @brief Return colors weights
+     * @brief Return colors weights (after computing it)
      *
      * @return const std::vector<std::vector<int>>& colors_weights of the solution
      */
-    [[nodiscard]] const std::vector<std::vector<int>> &colors_weights() const;
+    [[nodiscard]] std::vector<std::vector<int>> weights() const;
 
     [[nodiscard]] const std::vector<std::vector<int>> &conflicts_colors() const;
 };

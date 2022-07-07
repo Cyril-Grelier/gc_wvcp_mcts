@@ -6,7 +6,7 @@
 typedef void (*init_ptr)(Solution &solution);
 
 /**
- * @brief Greedy algorithm, that color vertices in the free_vertice order
+ * @brief Greedy algorithm, that color vertices in the free_vertices order
  * and giving possibility to add a new color any time
  *
  * @param solution solution to use, the solution will be modified
@@ -23,7 +23,7 @@ void greedy_random(Solution &solution);
 void greedy_constrained(Solution &solution);
 
 /**
- * @brief Greedy algorithm, that color vertices in the free_vertice order
+ * @brief Greedy algorithm, that color vertices in the free_vertices order
  * giving the first available color to the vertex
  *
  * @param solution solution to use, the solution will be modified
@@ -31,9 +31,16 @@ void greedy_constrained(Solution &solution);
 void greedy_deterministic(Solution &solution);
 
 /**
+ * @brief Worst greedy, one vertex per color
+ *
+ * @param solution solution to use, the solution will be modified
+ */
+void greedy_worst(Solution &solution);
+
+/**
  * @brief Get the initialization
  *
  * @param initialization
  * @return init_ptr function greedy
  */
-init_ptr get_initialization_fct(const Initialization &initialization);
+init_ptr get_initialization_fct(const std::string &initialization);

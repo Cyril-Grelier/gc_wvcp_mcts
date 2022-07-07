@@ -53,4 +53,4 @@ class LocalSearch : public Method {
  * @param local_search
  * @return local_search_ptr function local search
  */
-local_search_ptr get_local_search_fct(const Local_search &local_search);
+local_search_ptr get_local_search_fct(const std::string &local_search);

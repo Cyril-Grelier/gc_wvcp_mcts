@@ -85,6 +85,9 @@ void ilsts(Solution &best_solution, const bool verbose) {
                     std::chrono::high_resolution_clock::now());
                 print_result_ls(best_time, best_solution, turn);
             }
+        } else if ((not working_solution.has_unassigned_vertices()) and
+                   (best_solution.score_wvcp() == working_solution.score_wvcp())) {
+            best_solution = working_solution.solution();
         }
     }
     if (verbose) {
@@ -111,7 +114,7 @@ bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &t
         }
 
         std::vector<int> costs(solution.nb_colors(), 0);
-        std::vector<int> rellocated(solution.nb_colors(), 0);
+        std::vector<int> relocated(solution.nb_colors(), 0);
         for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
             int neighbor_color = solution.color(neighbor);
             if (neighbor_color == -1) {
@@ -123,13 +126,13 @@ bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &t
             }
 
             if (solution.nb_free_colors(neighbor) > 0) {
-                ++rellocated[neighbor_color];
+                ++relocated[neighbor_color];
             } else if (tabu[neighbor] < iter) {
-                ++rellocated[neighbor_color];
+                ++relocated[neighbor_color];
                 ++costs[neighbor_color];
             }
 
-            if (rellocated[neighbor_color] ==
+            if (relocated[neighbor_color] ==
                     solution.conflicts_colors(neighbor_color, vertex) and
                 costs[neighbor_color] == 0) {
                 std::vector<int> unassigned;
@@ -150,7 +153,7 @@ bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &t
                 solution.remove_unassigned_vertex(vertex);
                 return true;
             }
-            if (rellocated[neighbor_color] ==
+            if (relocated[neighbor_color] ==
                     solution.conflicts_colors(neighbor_color, vertex) and
                 costs[neighbor_color] == 1 and min_cost > costs[neighbor_color]) {
                 min_cost = costs[neighbor_color];
@@ -225,7 +228,7 @@ bool M_5(ProxiSolutionILSTS &solution,
                 solution.color(vertex) != -1)) {
             continue;
         }
-        std::vector<int> rellocated(solution.nb_colors(), 0);
+        std::vector<int> relocated(solution.nb_colors(), 0);
         for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
             int c_neighbor = solution.color(neighbor);
             if (c_neighbor == -1)
@@ -234,10 +237,10 @@ bool M_5(ProxiSolutionILSTS &solution,
                 std::max(0,
                          Graph::g->weights[vertex] - solution.max_weight(c_neighbor))) {
                 if (solution.nb_free_colors(neighbor) > 0) {
-                    ++rellocated[c_neighbor];
+                    ++relocated[c_neighbor];
                 }
             }
-            if (rellocated[c_neighbor] == solution.conflicts_colors(c_neighbor, vertex)) {
+            if (relocated[c_neighbor] == solution.conflicts_colors(c_neighbor, vertex)) {
                 std::vector<int> unassigned;
                 for (const auto &y : Graph::g->neighborhood[vertex]) {
                     if (solution.color(y) == c_neighbor and
@@ -266,7 +269,7 @@ bool M_6(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu)
     const int delta{solution.unassigned_score() - solution.score_wvcp()};
 
     const int v = rd::choice(solution.unassigned());
-    std::vector<int> rellocated(solution.nb_colors(), 0);
+    std::vector<int> relocated(solution.nb_colors(), 0);
     std::vector<int> costs(solution.nb_colors(), 0);
 
     for (const auto &neighbor : Graph::g->neighborhood[v]) {
@@ -275,13 +278,13 @@ bool M_6(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &tabu)
             continue;
         if (delta > std::max(0, Graph::g->weights[v] - solution.max_weight(c_neighbor))) {
             if (solution.nb_free_colors(neighbor) > 0) {
-                ++rellocated[c_neighbor];
+                ++relocated[c_neighbor];
             } else {
-                ++rellocated[c_neighbor];
+                ++relocated[c_neighbor];
                 ++costs[c_neighbor];
             }
 
-            if (rellocated[c_neighbor] == solution.conflicts_colors(c_neighbor, v) and
+            if (relocated[c_neighbor] == solution.conflicts_colors(c_neighbor, v) and
                 min_cost > costs[c_neighbor]) {
                 min_cost_c = c_neighbor;
                 min_cost = costs[c_neighbor];
