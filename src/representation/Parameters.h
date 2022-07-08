@@ -12,50 +12,32 @@
  */
 struct Parameters {
 
-    /** @brief The parameters of the search*/
-    static std::unique_ptr<Parameters> p;
+    static std::unique_ptr<Parameters> p; /** @brief The parameters of the search*/
 
-    /** @brief Time of the beginning of the search*/
-    const std::chrono::high_resolution_clock::time_point time_start;
-    /** @brief Time limit for the algorithm*/
-    const int time_limit;
-    /** @brief time limit for the algorithm, can be set to now to stop*/
-    std::chrono::high_resolution_clock::time_point time_stop;
-    /** @brief Rand seed given in parameter*/
+    const std::string problem;
+    const std::string instance;
+    const std::string method;
     const int rand_seed;
-    /** @brief Target to reach before stopping the search*/
-    const int target;
-
-    /** @brief Number of iteration maximum for the MCTS*/
-    const long nb_max_iterations;
-
-    /** @brief Type of initialization for local search*/
+    const int target; /** @brief Best known score*/
+    const bool use_target;
+    const std::string objective;
+    const std::chrono::high_resolution_clock::time_point time_start;
+    const int time_limit;
+    std::chrono::high_resolution_clock::time_point
+        time_stop; /** @brief time limit for the algorithm, can be set to now to stop*/
+    const long nb_max_iterations; /** @brief Number of iteration maximum for the MCTS*/
     const std::string initialization;
-
-    /** @brief Number of iteration for the local search*/
     const long nb_iter_local_search;
-    /** @brief Maximum time for a run of local search*/
     const int max_time_local_search;
-
-    /** @brief Name of the local_search*/
-    const std::string local_search;
-
-    // MCTS
-
-    /** @brief Type of simulation (MCTS)*/
-    std::string simulation;
-    /** @brief Coefficient exploration vs exploitation (MCTS)*/
     const double coeff_exploi_explo;
-
-    /** @brief Header for csv representation*/
+    const std::string local_search;
+    const std::string simulation;
+    const int O_time;
+    const double P_time;
+    const std::string output_file; /** @brief Output file name if not on console*/
+    std::FILE *output{nullptr};    /** @brief Output, stdout if console*/
     std::string header_csv{};
-    /** @brief Line of data for csv representation*/
     std::string line_csv{};
-
-    /** @brief Output, stdout if console (set in utils/parsing.cpp*/
-    std::FILE *output = stdout;
-    /** @brief Output file name if not on console*/
-    std::string output_file = "";
 
     /**
      * @brief Set parameters for the search
@@ -67,18 +49,24 @@ struct Parameters {
     /**
      * @brief Construct Parameters
      */
-    explicit Parameters(const std::string &problem,
-                        const std::string &method,
-                        const int &time_limit_,
-                        const int &rand_seed_,
-                        const int &target_,
-                        const long &nb_max_iterations_,
+    explicit Parameters(const std::string &problem_,
+                        const std::string &instance_,
+                        const std::string &method_,
+                        int rand_seed_,
+                        int target_,
+                        bool use_target_,
+                        const std::string &objective_,
+                        int time_limit_,
+                        long nb_max_iterations_,
                         const std::string &initialization_,
-                        const long &nb_iter_local_search_,
-                        const int &max_time_local_search_,
+                        long nb_iter_local_search_,
+                        int max_time_local_search_,
+                        double coeff_exploi_explo_,
                         const std::string &local_search_,
                         const std::string &simulation_,
-                        const double &coeff_exploi_explo_);
+                        int O_time_,
+                        double P_time_,
+                        const std::string &output_file_);
 
     /**
      * @brief Close output file if needed

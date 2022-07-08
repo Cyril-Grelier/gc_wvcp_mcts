@@ -25,17 +25,14 @@ void LocalSearch::run() {
 }
 
 [[nodiscard]] const std::string LocalSearch::header_csv() const {
-    return fmt::format("date,method,instance,{},turn,time,{}\n",
-                       Parameters::p->header_csv,
-                       Solution::header_csv);
+    return fmt::format(
+        "date,{},turn,time,{}\n", Parameters::p->header_csv, Solution::header_csv);
 }
 
 [[nodiscard]] const std::string LocalSearch::line_csv() const {
     return fmt::format(
-        "{},{},{},{},{},{},{}\n",
+        "{},{},{},{},{}\n",
         get_date_str(),
-        Parameters::p->local_search,
-        Graph::g->name,
         Parameters::p->line_csv,
         0, // turn,
         Parameters::p->elapsed_time(std::chrono::high_resolution_clock::now()),

@@ -23,13 +23,17 @@ MCTS::MCTS()
     : _root_node(nullptr),
       _current_node{_root_node},
       _base_solution(),
-      _best_solution(_base_solution),
+      _best_solution(),
       _current_solution(_base_solution),
       _turn{0},
       _initialization(get_initialization_fct(Parameters::p->initialization)),
       _local_search(get_local_search_fct(Parameters::p->local_search)),
       _simulation(get_simulation_fct(Parameters::p->simulation)) {
+    greedy_worst(_best_solution);
 
+    if (Parameters::p->use_target and Parameters::p->target > 0) {
+        Solution::best_score_wvcp = Parameters::p->target;
+    }
     // Creation of the base solution and root node
     const auto next_moves{next_possible_moves(_base_solution)};
     assert(next_moves.size() == 1);
@@ -43,7 +47,8 @@ MCTS::MCTS()
 bool MCTS::stop_condition() const {
     return (_turn < Parameters::p->nb_max_iterations) and
            (not Parameters::p->time_limit_reached()) and
-           not(Solution::best_score_wvcp <= Parameters::p->target) and
+           not(Parameters::p->objective == "reached" and
+               (_best_solution.score_wvcp() <= Parameters::p->target)) and
            not _root_node->fully_explored();
 }
 
@@ -60,11 +65,11 @@ void MCTS::run() {
 
         _initialization(_current_solution);
 
-        // Doesn't perform local search if less than 15%
+        // Doesn't perform local search if less than 10%
         // of the vertices are free to be moved
         const bool can_perform_ls{
-            (Graph::g->nb_vertices - _current_solution.first_free_vertex()) <
-            (Graph::g->nb_vertices * 0.15)};
+            (Graph::g->nb_vertices - _current_solution.first_free_vertex()) >
+            (Graph::g->nb_vertices * 0.10)};
         // if the simulation is depth/fit/depth_fit
         if (_simulation and can_perform_ls) {
             _simulation(_current_solution, _local_search, helper);
@@ -76,12 +81,13 @@ void MCTS::run() {
         const int score_wvcp{_current_solution.score_wvcp()};
         _current_node->update(score_wvcp);
 
-        if (_best_solution.best_score_wvcp > score_wvcp) {
+        if (_best_solution.score_wvcp() > score_wvcp) {
             _t_best = std::chrono::high_resolution_clock::now();
-            Solution::best_score_wvcp = score_wvcp;
             _best_solution = _current_solution;
+            if (Solution::best_score_wvcp > score_wvcp)
+                Solution::best_score_wvcp = score_wvcp;
             fmt::print(Parameters::p->output, "{}", line_csv());
-            _root_node->clean_graph(_best_solution.best_score_wvcp);
+            _root_node->clean_graph(_best_solution.score_wvcp());
         }
         ++_turn;
     }
@@ -117,16 +123,15 @@ void MCTS::expansion() {
 }
 
 [[nodiscard]] const std::string MCTS::header_csv() const {
-    return fmt::format("date,method,instance,{},turn,time,depth,nb total node,nb "
+    return fmt::format("date,{},turn,time,depth,nb total node,nb "
                        "current node,height,{}\n",
                        Parameters::p->header_csv,
                        Solution::header_csv);
 }
 
 [[nodiscard]] const std::string MCTS::line_csv() const {
-    return fmt::format("{},mcts,{},{},{},{},{},{},{},{},{}\n",
+    return fmt::format("{},{},{},{},{},{},{},{},{}\n",
                        get_date_str(),
-                       Graph::g->name,
                        Parameters::p->line_csv,
                        _turn,
                        Parameters::p->elapsed_time(_t_best),
@@ -168,8 +173,6 @@ void apply_action(Solution &solution, const Action &action) {
 }
 
 void MCTS::to_dot(const std::string &file_name) const {
-    // fmt::format(
-    //     "../graph_dot/{}_{}_{:09}.dot", g->name, _parameters->rand_seed, _turn);
     if ((_turn % 5) == 0) {
         std::ofstream file{file_name};
         file << _root_node->to_dot();

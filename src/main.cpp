@@ -29,9 +29,9 @@ void signal_handler(int signum);
  *
  * @param argc : number of arguments given to main
  * @param argv : list of arguments
- * @return std::shared_ptr<Method>
+ * @return std::unique_ptr<Method>
  */
-std::shared_ptr<Method> parse(int argc, const char **argv);
+std::unique_ptr<Method> parse(int argc, const char **argv);
 
 int main(int argc, const char *argv[]) {
     // see src/utils/parsing.cpp for default parameters
@@ -52,7 +52,7 @@ void signal_handler(int signum) {
     Parameters::p->time_stop = std::chrono::high_resolution_clock::now();
 }
 
-std::shared_ptr<Method> parse(int argc, const char **argv) {
+std::unique_ptr<Method> parse(int argc, const char **argv) {
     // defaults values for parameters are located in representation/Parameter.cpp
 
     // analyse command line options
@@ -85,12 +85,13 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "name of the instance (located in instance/wvcp_reduced/)",
             cxxopts::value<std::string>()->default_value(
                 //
+                "p06"
                 // "p42"
                 // "queen10_10"
                 // "DSJC125.1gb"
                 // "zeroin.i.3"
                 // "DSJC500.5"
-                "DSJC250.5"
+                // "DSJC250.5"
                 // "DSJC500.9"
                 // "wap01a"
                 // "C2000.9"
@@ -104,8 +105,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "method (mcts, local_search)",
             cxxopts::value<std::string>()->default_value(
                 //
-                // "mcts"
-                "local_search"
+                "mcts"
+                // "local_search"
                 //
                 ));
 
@@ -124,12 +125,35 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "if the target score is reach, the search is stopped",
             cxxopts::value<int>()->default_value("0"));
 
+        options.allow_unrecognised_options().add_options()(
+            "u,use_target",
+            "for the mcts, if true, the mcts will prune the tree according to the target "
+            "otherwise it will use the best found score during the search",
+            cxxopts::value<bool>()->default_value(
+                //
+                "false"
+                // "true"
+                //
+                ));
+
+        options.allow_unrecognised_options().add_options()(
+            "b,objective",
+            "for mcts, does the algorithm stop when the target is reached or when "
+            "optimality is proven? The algorithm can also stop when the time limit is "
+            "reached (optimality, reached)",
+            cxxopts::value<std::string>()->default_value(
+                //
+                "optimality"
+                // "reached"
+                //
+                ));
+
         // const std::string time_limit{"3600"};
-        const std::string time_limit{"18000"};
+        const std::string time_limit_default{"18000"};
         options.allow_unrecognised_options().add_options()(
             "t,time_limit",
             "maximum execution time in seconds",
-            cxxopts::value<int>()->default_value(time_limit));
+            cxxopts::value<int>()->default_value(time_limit_default));
 
         options.allow_unrecognised_options().add_options()(
             "n,nb_max_iterations",
@@ -143,8 +167,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             cxxopts::value<std::string>()->default_value(
                 //
                 // "random"
-                "constrained"
-                // "deterministic"
+                // "constrained"
+                "deterministic"
                 //
                 ));
 
@@ -165,8 +189,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "can by override by nb_iter_local_search or o and t time",
             cxxopts::value<int>()->default_value(
                 //
-                time_limit
-                // "-1"
+                // time_limit
+                "-1"
                 //
                 ));
 
@@ -196,8 +220,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             "Simulation for MCTS (greedy, local_search, depth, fit, depth_fit)",
             cxxopts::value<std::string>()->default_value(
                 //
-                "greedy"
-                // "local_search"
+                // "greedy"
+                "local_search"
                 // "fit"
                 // "depth"
                 // "depth_fit"
@@ -207,15 +231,15 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
         options.allow_unrecognised_options().add_options()(
             "O,O_time",
             "O to calculate the time of RL : O+P*nb_vertices seconds",
-            cxxopts::value<int>()->default_value("4"));
+            cxxopts::value<int>()->default_value("0"));
 
         options.allow_unrecognised_options().add_options()(
             "P,P_time",
             "P to calculate the time of RL : O+P*nb_vertices seconds",
-            cxxopts::value<double>()->default_value("0.01"));
+            cxxopts::value<double>()->default_value("0.2"));
 
         options.allow_unrecognised_options().add_options()(
-            "o,ouput_to_file",
+            "o,output_file",
             "output file, let empty if output to stdout",
             cxxopts::value<std::string>()->default_value(""));
 
@@ -254,11 +278,8 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             exit(0);
         }
 
-        // init rand seed
-        const int rand_seed{result["rand_seed"].as<int>()};
-        rd::generator.seed(rand_seed);
-
-        const std::string problem{result["problem"].as<std::string>()};
+        // get parameters
+        const std::string problem = result["problem"].as<std::string>();
         if (problem != "wvcp" and problem != "gcp") {
             fmt::print(stderr,
                        "unknown problem {}\n"
@@ -269,49 +290,70 @@ std::shared_ptr<Method> parse(int argc, const char **argv) {
             exit(1);
         }
 
-        // init graph
-        Graph::init_graph(result["instance"].as<std::string>(), problem);
+        const std::string instance = result["instance"].as<std::string>();
+        Graph::init_graph(instance, problem);
 
-        const int max_time_local_search{
-            result["max_time_local_search"].as<int>() == -1
-                ? std::max(1,
-                           static_cast<int>(static_cast<double>(Graph::g->nb_vertices) *
-                                            result["P_time"].as<double>()) +
-                               result["O_time"].as<int>())
-                : result["max_time_local_search"].as<int>()};
+        const std::string method = result["method"].as<std::string>();
 
-        // init parameters
-        Parameters::p =
-            std::make_unique<Parameters>(result["problem"].as<std::string>(),
-                                         result["method"].as<std::string>(),
-                                         result["time_limit"].as<int>(),
-                                         result["rand_seed"].as<int>(),
-                                         result["target"].as<int>(),
-                                         result["nb_max_iterations"].as<long>(),
-                                         result["initialization"].as<std::string>(),
-                                         result["nb_iter_local_search"].as<long>(),
-                                         max_time_local_search,
-                                         result["local_search"].as<std::string>(),
-                                         result["simulation"].as<std::string>(),
-                                         result["coeff_exploi_explo"].as<double>());
+        const int rand_seed = result["rand_seed"].as<int>();
+        rd::generator.seed(rand_seed);
 
-        // set output file if needed
-        const std::string output_file{result["ouput_to_file"].as<std::string>()};
-        if (output_file != "") {
-            std::FILE *file = std::fopen((output_file + ".running").c_str(), "w");
-            if (!file) {
-                fmt::print(stderr, "error while trying to access {}\n", output_file);
-                exit(1);
-            }
-            Parameters::p->output = file;
-            Parameters::p->output_file = output_file;
-        } else {
-            Parameters::p->output = stdout;
+        const int target = result["target"].as<int>();
+        const bool use_target = result["use_target"].as<bool>();
+        const std::string objective = result["objective"].as<std::string>();
+        if (objective != "optimality" and objective != "reached") {
+            fmt::print(stderr,
+                       "unknown objective {}\n"
+                       "select :\n"
+                       "\toptimality (for MCTS, stop when tree completely explored)\n"
+                       "\treached (for MCTS, stop when target reached)",
+                       problem);
+            exit(1);
         }
 
-        const std::string method{result["method"].as<std::string>()};
+        const int time_limit = result["time_limit"].as<int>();
+        const long nb_max_iterations = result["nb_max_iterations"].as<long>();
+        const std::string initialization = result["initialization"].as<std::string>();
+        const long nb_iter_local_search = result["nb_iter_local_search"].as<long>();
 
-        // create the method
+        int max_time_local_search = result["max_time_local_search"].as<int>();
+
+        const double coeff_exploi_explo = result["coeff_exploi_explo"].as<double>();
+        const std::string local_search = result["local_search"].as<std::string>();
+        const std::string simulation = result["simulation"].as<std::string>();
+
+        const int O_time = result["O_time"].as<int>();
+        const double P_time = result["P_time"].as<double>();
+        if (max_time_local_search == -1) {
+            max_time_local_search = std::max(
+                1,
+                static_cast<int>(static_cast<double>(Graph::g->nb_vertices) * P_time) +
+                    O_time);
+        }
+
+        const std::string output_file = result["output_file"].as<std::string>();
+
+        // init parameters
+        Parameters::p = std::make_unique<Parameters>(problem,
+                                                     instance,
+                                                     method,
+                                                     rand_seed,
+                                                     target,
+                                                     use_target,
+                                                     objective,
+                                                     time_limit,
+                                                     nb_max_iterations,
+                                                     initialization,
+                                                     nb_iter_local_search,
+                                                     max_time_local_search,
+                                                     coeff_exploi_explo,
+                                                     local_search,
+                                                     simulation,
+                                                     O_time,
+                                                     P_time,
+                                                     output_file);
+
+        // the method can't be created before the parameters
         if (method == "local_search") {
             return std::make_unique<LocalSearch>();
         }
