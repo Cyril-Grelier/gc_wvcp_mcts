@@ -42,7 +42,7 @@ def get_target(instance: str):
 
 
 # i,instance
-with open("all_instances.txt", "r", encoding="UTF8") as file:
+with open("50_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
 
