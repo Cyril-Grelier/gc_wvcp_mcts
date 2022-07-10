@@ -42,7 +42,7 @@ def get_target(instance: str):
 
 
 # i,instance
-with open("50_instances.txt", "r", encoding="UTF8") as file:
+with open("20_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
 
@@ -58,8 +58,8 @@ time_limit = 3600
 nb_max_iterations = 9000000000000000000
 initializations = [
     # "random",
-    # "constrained",
-    "deterministic",
+    "constrained",
+    # "deterministic",
 ]
 nb_iter_local_search = 9000000000000000000
 max_time_local_search = -1
@@ -78,9 +78,9 @@ local_searchs = [
     # "none",
     # "tabu_col",
     # "hill_climbing",
-    "afisa_original",
+    # "afisa_original",
     # "afisa",
-    "tabu_weight",
+    # "tabu_weight",
     "redls",
     "ilsts",
 ]
@@ -92,17 +92,18 @@ simulations = [
     # "depth_fit",
 ]
 O_time = 0
-P_time = 0.02
+P_times = [0.005, 0.01, 0.015, 0.02]
 
 
-output_directory = "output_mcts_local_search_deterministic"
+output_directory = "output_mcts_time_ls"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:
     for coeff in coeff_exploi_explo:
         for local_search in local_searchs:
             for simulation in simulations:
-                os.mkdir(f"{output_directory}/{local_search}")
+                for P_time in P_times:
+                    os.mkdir(f"{output_directory}/{local_search}_{P_time}")
 
 with open("to_eval_mcts", "w", encoding="UTF8") as file:
     for initialization in initializations:
@@ -112,25 +113,26 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                     for instance in instances:
                         target = 0  # get_target(instance)
                         for rand_seed in rand_seeds:
-                            file.write(
-                                f"./gc_wvcp "
-                                f" --problem {problem}"
-                                f" --instance {instance}"
-                                f" --method {method}"
-                                f" --rand_seed {rand_seed}"
-                                f" --target {target}"
-                                f" --use_target {use_target}"
-                                f" --objective {objective}"
-                                f" --time_limit {time_limit}"
-                                f" --nb_max_iterations {nb_max_iterations}"
-                                f" --initialization {initialization}"
-                                f" --nb_iter_local_search {nb_iter_local_search}"
-                                f" --max_time_local_search {max_time_local_search}"
-                                f" --coeff_exploi_explo {coeff}"
-                                f" --local_search {local_search}"
-                                f" --simulation {simulation}"
-                                f" --O_time {O_time}"
-                                f" --P_time {P_time}"
-                                f" --output_file ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
-                                "\n"
-                            )
+                            for P_time in P_times:
+                                file.write(
+                                    f"./gc_wvcp "
+                                    f" --problem {problem}"
+                                    f" --instance {instance}"
+                                    f" --method {method}"
+                                    f" --rand_seed {rand_seed}"
+                                    f" --target {target}"
+                                    f" --use_target {use_target}"
+                                    f" --objective {objective}"
+                                    f" --time_limit {time_limit}"
+                                    f" --nb_max_iterations {nb_max_iterations}"
+                                    f" --initialization {initialization}"
+                                    f" --nb_iter_local_search {nb_iter_local_search}"
+                                    f" --max_time_local_search {max_time_local_search}"
+                                    f" --coeff_exploi_explo {coeff}"
+                                    f" --local_search {local_search}"
+                                    f" --simulation {simulation}"
+                                    f" --O_time {O_time}"
+                                    f" --P_time {P_time}"
+                                    f" --output_file ../{output_directory}/{local_search}_{P_time}/{instance}_{rand_seed}.csv"
+                                    "\n"
+                                )
