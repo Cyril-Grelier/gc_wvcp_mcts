@@ -42,10 +42,9 @@ def get_target(instance: str):
 
 
 # i,instance
-with open("20_instances.txt", "r", encoding="UTF8") as file:
+with open("instances/instance_list_wvcp.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
-instances = ["latin_square_10", "wap01a", "DSJC500.5", "le450a"]
 
 problem = "wvcp"  # gcp wvcp
 method = "mcts"
@@ -55,28 +54,28 @@ rand_seeds = list(range(20))
 target = 0
 use_target = "false"
 objective = "optimality"  # optimality reached
-time_limit = 3600 * 5
+time_limit = 3600
 nb_max_iterations = 9000000000000000000
 initializations = [
-    # "random",
+    "random",
     "constrained",
-    # "deterministic",
+    "deterministic",
 ]
 nb_iter_local_search = 9000000000000000000
 max_time_local_search = -1
 coeff_exploi_explo = [
-    "0",
-    "0.25",
-    "0.5",
-    "0.75",
+    # "0",
+    # "0.25",
+    # "0.5",
+    # "0.75",
     "1",
-    "1.25",
-    "1.5",
-    "1.75",
-    "2",
-    "3",
-    "4",
-    "5",
+    # "1.25",
+    # "1.5",
+    # "1.75",
+    # "2",
+    # "3",
+    # "4",
+    # "5",
 ]
 local_searchs = [
     "none",
@@ -99,7 +98,7 @@ O_time = 0
 P_time = 0  # 0.02
 
 
-output_directory = "mcts_constrained_coeff_4"
+output_directory = "mcts_3_greedy"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:
@@ -107,7 +106,7 @@ for initialization in initializations:
         for local_search in local_searchs:
             for simulation in simulations:
                 # for P_time in P_times:
-                os.mkdir(f"{output_directory}/{coeff}")
+                os.mkdir(f"{output_directory}/{initialization}")
 
 with open("to_eval_mcts", "w", encoding="UTF8") as file:
     for initialization in initializations:
@@ -136,6 +135,6 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                                 f" --simulation {simulation}"
                                 f" --O_time {O_time}"
                                 f" --P_time {P_time}"
-                                f" --output_file ../{output_directory}/{coeff}/{instance}_{rand_seed}.csv"
+                                f" --output_file ../{output_directory}/{initialization}/{instance}_{rand_seed}.csv"
                                 "\n"
                             )

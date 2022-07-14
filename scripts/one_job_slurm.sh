@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --job-name=gc_wvcp
+#SBATCH --job-name=greedy
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --array=1-1000
-#SBATCH --time=05:10:00
+#SBATCH --time=01:10:00
 #SBATCH --partition=SMP-short
 #SBATCH --exclude=cribbar[041-056]
 #SBATCH --output=slurm_output/slurm-%x-%a-%j.out
