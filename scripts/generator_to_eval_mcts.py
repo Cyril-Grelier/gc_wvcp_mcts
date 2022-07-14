@@ -45,6 +45,7 @@ def get_target(instance: str):
 with open("20_instances.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
+instances = ["latin_square_10", "wap01a", "DSJC500.5", "le450a"]
 
 problem = "wvcp"  # gcp wvcp
 method = "mcts"
@@ -73,6 +74,9 @@ coeff_exploi_explo = [
     "1.5",
     "1.75",
     "2",
+    "3",
+    "4",
+    "5",
 ]
 local_searchs = [
     "none",
@@ -92,10 +96,10 @@ simulations = [
     # "depth_fit",
 ]
 O_time = 0
-P_time = 0.02
+P_time = 0  # 0.02
 
 
-output_directory = "output_mcts_constrained_coeff"
+output_directory = "mcts_constrained_coeff_4"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:
@@ -103,7 +107,7 @@ for initialization in initializations:
         for local_search in local_searchs:
             for simulation in simulations:
                 # for P_time in P_times:
-                os.mkdir(f"{output_directory}/{local_search}")
+                os.mkdir(f"{output_directory}/{coeff}")
 
 with open("to_eval_mcts", "w", encoding="UTF8") as file:
     for initialization in initializations:
@@ -132,6 +136,6 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                                 f" --simulation {simulation}"
                                 f" --O_time {O_time}"
                                 f" --P_time {P_time}"
-                                f" --output_file ../{output_directory}/{local_search}_{P_time}/{instance}_{rand_seed}.csv"
+                                f" --output_file ../{output_directory}/{coeff}/{instance}_{rand_seed}.csv"
                                 "\n"
                             )

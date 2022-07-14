@@ -80,18 +80,21 @@ void MCTS::run() {
 
         const int score_wvcp{_current_solution.score_wvcp()};
         _current_node->update(score_wvcp);
-
         if (_best_solution.score_wvcp() > score_wvcp) {
             _t_best = std::chrono::high_resolution_clock::now();
             _best_solution = _current_solution;
             if (Solution::best_score_wvcp > score_wvcp)
                 Solution::best_score_wvcp = score_wvcp;
             fmt::print(Parameters::p->output, "{}", line_csv());
+            _current_node = nullptr;
             _root_node->clean_graph(_best_solution.score_wvcp());
         }
+        _current_node = nullptr;
         ++_turn;
     }
+    _current_node = _root_node;
     fmt::print(Parameters::p->output, "{}", line_csv());
+    _current_node = nullptr;
 }
 
 void MCTS::selection() {

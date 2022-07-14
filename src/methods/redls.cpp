@@ -73,10 +73,12 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
     const int delta_wvcp{std::abs(best_local_score - solution.score_wvcp())};
     int best_conflicts{0};
     for (const auto &vertex : solution.free_vertices()) {
+        // for each vertices in conflict
         if (tabu_list[vertex] or not solution.has_conflicts(vertex)) {
             continue;
         }
         for (const auto &color : solution.non_empty_colors()) {
+            // for each color different from the color of the vertex
             if (color == solution.color(vertex)) {
                 continue;
             }
@@ -85,6 +87,8 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
                 solution.delta_wvcp_score(vertex, color) >= delta_wvcp) {
                 continue;
             }
+            // pick the move that reduce the most the number of conflicts while
+            // improving the score
             if (delta_conflicts < best_conflicts) {
                 best_conflicts = delta_conflicts;
                 best_colorations.clear();
@@ -96,12 +100,12 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
     if (best_colorations.empty()) {
         return false;
     }
-
+    // pick one of the best improving move randomly and apply it
     const auto best_move{rd::choice(best_colorations)};
     solution.delete_from_color(best_move.vertex);
     solution.add_to_color(best_move.vertex, best_move.color);
+    // the vertex become tabu while its neighbors get out of the tabu list
     tabu_list[best_move.vertex] = true;
-
     for (const auto &neighbor : Graph::g->neighborhood[best_move.vertex]) {
         tabu_list[neighbor] = false;
     }
@@ -112,6 +116,9 @@ bool candidate_set_1(ProxiSolutionRedLS &solution,
 bool candidate_set_2(ProxiSolutionRedLS &solution,
                      const bool with_conf,
                      std::vector<bool> &tabu_list) {
+    // find a move that improve the number of conflict and possibly the score
+    // if with_conf is true then the vertex must not be in the tabu list
+    // if with_conf is true then the chosen vertex will be tabu after the move
     std::vector<Coloration> best_colorations;
     for (const auto &vertex : solution.free_vertices()) {
         if (with_conf and tabu_list[vertex]) {
@@ -145,6 +152,9 @@ bool candidate_set_2(ProxiSolutionRedLS &solution,
 bool candidate_set_3(ProxiSolutionRedLS &solution,
                      const int best_local_score,
                      std::vector<bool> &tabu_list) {
+    // select all non tabu vertices in conflict that keep the wvcp
+    // score lower than the best found score
+    // the vertex will be tabu after the move
     const int delta_wvcp{best_local_score - solution.score_wvcp()};
     std::vector<int> vertices;
     for (const auto &vertex : solution.free_vertices()) {
@@ -167,6 +177,9 @@ bool candidate_set_3(ProxiSolutionRedLS &solution,
 }
 
 void selectionRule1(ProxiSolutionRedLS &solution) {
+    // look for the best set of heaviest vertices in each colors
+    // to relocate them in an other color without increasing too
+    // much the number of conflicts
     float best_ratio = 0;
     int best_color = -1;
     std::vector<int> best_heaviest_vertices;
@@ -218,6 +231,9 @@ void selectionRule1(ProxiSolutionRedLS &solution) {
 void selectionRule2(ProxiSolutionRedLS &solution,
                     const int best_local_score,
                     std::vector<bool> &tabu_list) {
+    // Pick a random pair of vertices in conflicts and find the best move
+    // possibly improving the score and the number of vertices in conflicts
+    // otherwise a random move in a random color
     const int delta_wvcp{best_local_score - solution.score_wvcp()};
     Coloration best_coloration{-1, -1};
     const auto &[v1, v2]{rd::choice(solution.conflict_edges())};

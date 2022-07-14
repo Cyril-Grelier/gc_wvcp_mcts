@@ -129,16 +129,12 @@ bool ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
     std::uniform_int_distribution<int> distribution(0, _solution.nb_colors() - 1);
     std::vector<int> unassigned;
     _unassigned_score = _solution.score_wvcp();
-    const int first_freeze_vertex{_solution.first_free_vertex()};
+    const int first_free_vertex{_solution.first_free_vertex()};
     for (int i = 0; i < force; ++i) {
         std::vector<int> possible_colors;
         for (const auto &color : _solution.non_empty_colors()) {
-            const auto &vertices{_solution.colors_vertices(color)};
-            if (std::all_of(vertices.begin(),
-                            vertices.end(),
-                            [first_freeze_vertex](const int &vertex) {
-                                return first_freeze_vertex < vertex;
-                            }))
+            const int first_vertex = *_solution.colors_vertices(color).begin();
+            if (first_vertex >= first_free_vertex)
                 possible_colors.push_back(color);
         }
 
@@ -173,7 +169,8 @@ bool ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
 
 void ProxiSolutionILSTS::perturb_vertices(const int force) {
     assert(_unassigned.empty());
-    std::uniform_int_distribution<int> distribution_v(0, Graph::g->nb_vertices - 1);
+    std::uniform_int_distribution<int> distribution_v(_solution.first_free_vertex(),
+                                                      Graph::g->nb_vertices - 1);
     std::uniform_int_distribution<int> distribution_c(0, _solution.nb_colors() - 1);
 
     for (int i = 0; i < force; ++i) {
