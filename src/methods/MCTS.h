@@ -56,7 +56,7 @@ class MCTS : public Method {
      */
     explicit MCTS();
 
-    ~MCTS() override = default;
+    ~MCTS();
 
     /**
      * @brief Stopping condition for the MCTS search depending on turn, time limit and the

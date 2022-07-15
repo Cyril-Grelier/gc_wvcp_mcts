@@ -29,6 +29,10 @@ MCTS::MCTS()
       _initialization(get_initialization_fct(Parameters::p->initialization)),
       _local_search(get_local_search_fct(Parameters::p->local_search)),
       _simulation(get_simulation_fct(Parameters::p->simulation)) {
+    if (Parameters::p->simulation == "greedy") {
+        // security if the local search parameter wasn't set to "none"
+        _local_search = nullptr;
+    }
     greedy_worst(_best_solution);
 
     if (Parameters::p->use_target and Parameters::p->target > 0) {
@@ -42,6 +46,12 @@ MCTS::MCTS()
     _root_node = std::make_shared<Node>(nullptr, next_moves[0], next_possible_actions);
 
     fmt::print(Parameters::p->output, "{}", header_csv());
+}
+
+MCTS::~MCTS() {
+    _current_node = nullptr;
+    _root_node->clean_graph(0);
+    _root_node = nullptr;
 }
 
 bool MCTS::stop_condition() const {
