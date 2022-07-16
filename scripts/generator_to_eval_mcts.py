@@ -45,6 +45,16 @@ def get_target(instance: str):
 with open("instances/instance_list_wvcp.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
+instances = [
+    "C2000.5",
+    "DSJC500.1",
+    "DSJC500.5",
+    "DSJC500.9",
+    "flat1000_50_0",
+    "le450_25a",
+    "wap01a",
+]
+
 
 problem = "wvcp"  # gcp wvcp
 method = "mcts"
@@ -57,9 +67,9 @@ objective = "optimality"  # optimality reached
 time_limit = 3600
 nb_max_iterations = 9000000000000000000
 initializations = [
-    "random",
+    # "random",
     "constrained",
-    "deterministic",
+    # "deterministic",
 ]
 nb_iter_local_search = 9000000000000000000
 max_time_local_search = -1
@@ -78,27 +88,28 @@ coeff_exploi_explo = [
     # "5",
 ]
 local_searchs = [
-    "none",
+    # "none",
     # "tabu_col",
     # "hill_climbing",
     # "afisa_original",
     # "afisa",
     # "tabu_weight",
-    # "redls",
+    "redls",
+    "redls_freeze",
     # "ilsts",
 ]
 simulations = [
-    "greedy",
-    # "local_search",
+    # "greedy",
+    "local_search",
     # "fit",
     # "depth",
     # "depth_fit",
 ]
 O_time = 0
-P_time = 0  # 0.02
+P_time = 0.02
 
 
-output_directory = "mcts_3_greedy"
+output_directory = "mcts_redls_freeze_or_not"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:
@@ -106,7 +117,7 @@ for initialization in initializations:
         for local_search in local_searchs:
             for simulation in simulations:
                 # for P_time in P_times:
-                os.mkdir(f"{output_directory}/{initialization}")
+                os.mkdir(f"{output_directory}/{local_search}")
 
 with open("to_eval_mcts", "w", encoding="UTF8") as file:
     for initialization in initializations:
@@ -135,6 +146,6 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                                 f" --simulation {simulation}"
                                 f" --O_time {O_time}"
                                 f" --P_time {P_time}"
-                                f" --output_file ../{output_directory}/{initialization}/{instance}_{rand_seed}.csv"
+                                f" --output_file ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
                                 "\n"
                             )

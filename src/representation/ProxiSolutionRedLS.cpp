@@ -156,3 +156,7 @@ ProxiSolutionRedLS::colors_vertices(const int &color) const {
 [[nodiscard]] int ProxiSolutionRedLS::max_weight(const int &color) const {
     return _solution.max_weight(color);
 }
+
+[[nodiscard]] int ProxiSolutionRedLS::first_free_vertex() const {
+    return _solution.first_free_vertex();
+}

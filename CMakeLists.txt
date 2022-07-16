@@ -33,6 +33,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/methods/LocalSearch.cpp src/methods/LocalSearch.h
     src/methods/MCTS.h src/methods/MCTS.cpp
     src/methods/redls.cpp src/methods/redls.h
+    src/methods/redls_freeze.cpp src/methods/redls_freeze.h
     src/methods/tabu_col.cpp src/methods/tabu_col.h
     src/methods/tabu_weight.cpp src/methods/tabu_weight.h
 )

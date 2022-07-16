@@ -62,4 +62,6 @@ class ProxiSolutionRedLS {
     [[nodiscard]] const std::set<int> &colors_vertices(const int &color) const;
 
     [[nodiscard]] int max_weight(const int &color) const;
+
+    [[nodiscard]] int first_free_vertex() const;
 };

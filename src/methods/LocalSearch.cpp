@@ -6,6 +6,7 @@
 #include "hill_climbing.h"
 #include "ilsts.h"
 #include "redls.h"
+#include "redls_freeze.h"
 #include "tabu_col.h"
 #include "tabu_weight.h"
 
@@ -54,12 +55,14 @@ local_search_ptr get_local_search_fct(const std::string &local_search) {
         return afisa_original;
     if (local_search == "redls")
         return redls;
+    if (local_search == "redls_freeze")
+        return redls_freeze;
     if (local_search == "ilsts")
         return ilsts;
 
     fmt::print(stderr,
                "Unknown local_search, please select : "
                "none, hill_climbing, tabu_col, tabu_weight, "
-               "afisa, afisa_original, redls, ilsts\n");
+               "afisa, afisa_original, redls, redls_freeze, ilsts\n");
     exit(1);
 }
