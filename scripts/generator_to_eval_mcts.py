@@ -45,24 +45,13 @@ def get_target(instance: str):
 with open("instances/instance_list_wvcp.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
-instances = [
-    "C2000.5",
-    "DSJC500.1",
-    "DSJC500.5",
-    "DSJC500.9",
-    "flat1000_50_0",
-    "le450_25a",
-    "wap01a",
-]
-
-
 problem = "wvcp"  # gcp wvcp
 method = "mcts"
 
 rand_seeds = list(range(20))
 
 target = 0
-use_target = "false"
+use_target = "false"  # false true
 objective = "optimality"  # optimality reached
 time_limit = 3600
 nb_max_iterations = 9000000000000000000
@@ -92,11 +81,11 @@ local_searchs = [
     # "tabu_col",
     # "hill_climbing",
     # "afisa_original",
-    # "afisa",
-    # "tabu_weight",
+    "afisa",
+    "tabu_weight",
     "redls",
-    "redls_freeze",
-    # "ilsts",
+    "ilsts",
+    # "redls_freeze",
 ]
 simulations = [
     # "greedy",
@@ -109,7 +98,7 @@ O_time = 0
 P_time = 0.02
 
 
-output_directory = "mcts_redls_freeze_or_not"
+output_directory = "mcts_ls_all_1h"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:

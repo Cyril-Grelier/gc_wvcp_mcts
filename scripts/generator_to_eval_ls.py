@@ -4,16 +4,26 @@ Generate to_eval file which list all run to perform for local search
 to split :
     split -l 1000 -d to_eval_ls to_eval_ls
 
-instance                  // i,instance
-problem                   // p,problem
-method                    // m,method
-time_limit                // t,time_limit
-rand_seed                 // r,rand_seed
-target                    // T,target
-initialization_str        // I,initialization
-nb_iter_local_search      // N,nb_iter_local_search
-max_time_local_search     // M,max_time_local_search
-local_search_str          // l,local_search
+Parameters : 
+    p,problem
+    i,instance
+    m,method
+    r,rand_seed
+    T,target
+    u,use_target
+    b,objective
+    t,time_limit
+    n,nb_max_iterations
+    I,initialization
+    N,nb_iter_local_search
+    M,max_time_local_search
+    c,coeff_exploi_explo
+    l,local_search
+    s,simulation
+    O,O_time
+    P,P_time
+    o,output_file
+
 """
 
 import os
@@ -31,65 +41,74 @@ def get_target(instance: str):
     print(f"instance {instance} not found in instances/best_scores_wvcp.txt")
 
 
-# instance  # i,instance
-with open("all_instances.txt", "r", encoding="UTF8") as file:
+# i,instance
+with open("instances/instance_list_wvcp.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
-problem = "wvcp"  # "wvcp" "gcp" # p, problem
-method = "local_search"  # m,method
+problem = "wvcp"  # gcp wvcp
+method = "local_search"
 
-time_limit = 3600  # t,time_limit
-# rand_seed  # r,rand_seed
 rand_seeds = list(range(20))
 
-target = 0  # T,target
-
-nb_max_iterations = 9000000000000000000  # n,nb_max_iterations
-nb_iter_local_search = 9000000000000000000  # N,nb_iter_local_search
-max_time_local_search = time_limit  # M,max_time_local_search
-
+target = 0
+use_target = "true"  # false true
+objective = "reached"  # optimality reached
+time_limit = 3600
+nb_max_iterations = 9000000000000000000
 initializations = [
     # "random",
     # "constrained",
-    "deterministic"
-]  # I,initialization
-
+    "deterministic",
+]
+nb_iter_local_search = 9000000000000000000
+max_time_local_search = -1
 local_searchs = [
-    # "none",
-    # "hill_climbing",
-    "tabu_weight",
     # "tabu_col",
+    # "hill_climbing",
+    "afisa_original",
     # "afisa",
-    # "afisa_original",
+    "tabu_weight",
     "redls",
     "ilsts",
-]  # l,local_search
+    # "redls_freeze",
+]
 
-output_directory = "output_local_search_solution_cleaned"
+O_time = 0
+P_time = 0.02
+
+
+output_directory = "ls_all_1h"
 
 os.mkdir(f"{output_directory}/")
 for local_search in local_searchs:
     for initialization in initializations:
-        os.mkdir(f"{output_directory}/{initialization}")
+        os.mkdir(f"{output_directory}/{local_search}")
 
-with open("to_eval_ls", "w", encoding="UTF8") as file:
-    for local_search in local_searchs:
-        for initialization in initializations:
+with open("to_eval_mcts", "w", encoding="UTF8") as file:
+    for initialization in initializations:
+        for local_search in local_searchs:
             for instance in instances:
                 target = get_target(instance)
                 for rand_seed in rand_seeds:
                     file.write(
                         f"./gc_wvcp "
-                        f" -p {problem}"
-                        f" -i {instance}"
-                        f" -m {method}"
-                        f" -t {time_limit}"
-                        f" -r {rand_seed}"
-                        f" -T {target}"
-                        f" -I {initialization}"
-                        f" -N {nb_iter_local_search}"
-                        f" -M {max_time_local_search}"
-                        f" -l {local_search}"
-                        f" -o ../{output_directory}/{initialization}/{instance}_{rand_seed}.csv"
+                        f" --problem {problem}"
+                        f" --instance {instance}"
+                        f" --method {method}"
+                        f" --rand_seed {rand_seed}"
+                        f" --target {target}"
+                        f" --use_target true"
+                        f" --objective reached"
+                        f" --time_limit {time_limit}"
+                        f" --nb_max_iterations {nb_max_iterations}"
+                        f" --initialization {initialization}"
+                        f" --nb_iter_local_search {nb_iter_local_search}"
+                        f" --max_time_local_search {max_time_local_search}"
+                        f" --coeff_exploi_explo 0"
+                        f" --local_search {local_search}"
+                        f" --simulation local_search"
+                        f" --O_time {O_time}"
+                        f" --P_time {P_time}"
+                        f" --output_file ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
                         "\n"
                     )
