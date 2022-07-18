@@ -19,6 +19,12 @@ void ilsts(Solution &best_solution, const bool verbose) {
     long no_improve{0}; // number of iterations without improvement
     long turn{0};
     int force{1}; // perturbation strength
+    // vertices to shuffle to explore randomly
+    std::vector<int> vertices;
+    int n{Graph::g->nb_vertices};
+    std::generate(vertices.begin(), vertices.end(), [&n] {
+        return --n;
+    });
 
     while (turn < Parameters::p->nb_iter_local_search and
            not Parameters::p->time_limit_reached_sub_method(max_time) and
@@ -26,12 +32,8 @@ void ilsts(Solution &best_solution, const bool verbose) {
         ++turn;
         ProxiSolutionILSTS next_s(working_solution);
 
-        // condition to stop for MCTS when no vertices can be unassigned
-        if (not next_s.unassigned_random_heavy_vertices(force)) {
-            return;
-        }
+        next_s.unassigned_random_heavy_vertices(force);
 
-        std::vector<int> free_vertices = next_s.free_vertices();
         long iter = 0;
         while (next_s.has_unassigned_vertices() and iter < Graph::g->nb_vertices * 10 and
                not Parameters::p->time_limit_reached_sub_method(max_time)) {
@@ -42,15 +44,13 @@ void ilsts(Solution &best_solution, const bool verbose) {
                 continue;
             }
 
-            std::shuffle(free_vertices.begin(), free_vertices.end(), rd::generator);
-            if (next_s.has_unassigned_vertices() and
-                M_4(next_s, iter, free_vertices, tabu)) {
+            std::shuffle(vertices.begin(), vertices.end(), rd::generator);
+            if (next_s.has_unassigned_vertices() and M_4(next_s, iter, vertices, tabu)) {
                 assert(next_s.check_solution());
                 continue;
             }
 
-            if (next_s.has_unassigned_vertices() and
-                M_5(next_s, iter, free_vertices, tabu)) {
+            if (next_s.has_unassigned_vertices() and M_5(next_s, iter, vertices, tabu)) {
                 assert(next_s.check_solution());
                 continue;
             }
@@ -197,11 +197,11 @@ bool M_3(ProxiSolutionILSTS &solution,
 
 bool M_4(ProxiSolutionILSTS &solution,
          const long iter,
-         const std::vector<int> &free_vertices,
+         const std::vector<int> &vertices,
          std::vector<long> &tabu) {
     const long max_counter{static_cast<long>(solution.non_empty_colors().size())};
     int counter = 0;
-    for (const auto &v : free_vertices) {
+    for (const auto &v : vertices) {
         if (solution.nb_free_colors(v) > 0 and tabu[v] < iter and
             solution.color(v) != -1) {
             tabu[v] = iter + static_cast<long>(solution.non_empty_colors().size());
@@ -218,11 +218,11 @@ bool M_4(ProxiSolutionILSTS &solution,
 
 bool M_5(ProxiSolutionILSTS &solution,
          const long iter,
-         const std::vector<int> &free_vertices,
+         const std::vector<int> &vertices,
          std::vector<long> &tabu) {
     const int delta{solution.unassigned_score() - solution.score_wvcp()};
 
-    for (const auto &vertex : free_vertices) {
+    for (const auto &vertex : vertices) {
         if (not(solution.nb_free_colors(vertex) == 0 and tabu[vertex] < iter and
                 not Graph::g->neighborhood[vertex].empty() and
                 solution.color(vertex) != -1)) {

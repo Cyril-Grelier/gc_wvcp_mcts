@@ -51,14 +51,14 @@ bool M_3(ProxiSolutionILSTS &solution,
  *
  * @param solution solution
  * @param iter number of iterations for tabu list
- * @param free_vertices shuffled free vertices
+ * @param vertices shuffled vertices
  * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
 bool M_4(ProxiSolutionILSTS &solution,
          const long iter,
-         const std::vector<int> &free_vertices,
+         const std::vector<int> &vertices,
          std::vector<long> &tabu);
 
 /**
@@ -66,14 +66,14 @@ bool M_4(ProxiSolutionILSTS &solution,
  *
  * @param solution solution
  * @param iter number of iterations for tabu list
- * @param free_vertices shuffled free vertices
+ * @param vertices shuffled vertices
  * @param tabu tabu list
  * @return true modification of the solution
  * @return false no modification
  */
 bool M_5(ProxiSolutionILSTS &solution,
          const long iter,
-         const std::vector<int> &free_vertices,
+         const std::vector<int> &vertices,
          std::vector<long> &tabu);
 
 /**

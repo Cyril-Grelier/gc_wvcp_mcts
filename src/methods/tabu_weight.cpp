@@ -16,11 +16,11 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
            turn < Parameters::p->nb_iter_local_search and
            best_solution.score_wvcp() != Parameters::p->target) {
         ++turn;
-        std::vector<Action> best_actions;
+        std::vector<Coloration> best_coloration;
         int best_evaluation{std::numeric_limits<int>::max()};
         auto possible_colors{solution.non_empty_colors()};
         possible_colors.push_back(-1);
-        for (const auto &vertex : solution.free_vertices()) {
+        for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const int &color : possible_colors) {
                 if (color == solution.color(vertex) or
                     (color != -1 and solution.conflicts_colors(color, vertex) != 0)) {
@@ -30,18 +30,18 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
                                      solution.delta_wvcp_score(vertex, color)};
                 if ((test_score < best_evaluation and tabu_list[vertex] <= turn) or
                     (test_score < best_solution.score_wvcp())) {
-                    best_actions.clear();
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.clear();
+                    best_coloration.emplace_back(Coloration{vertex, color});
                     best_evaluation = test_score;
                 } else if (test_score == best_evaluation and
                            (tabu_list[vertex] <= turn or
                             test_score < best_solution.score_wvcp())) {
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.emplace_back(Coloration{vertex, color});
                 }
             }
         }
-        if (not best_actions.empty()) {
-            const Action chosen_one{rd::choice(best_actions)};
+        if (not best_coloration.empty()) {
+            const Coloration chosen_one{rd::choice(best_coloration)};
             solution.delete_from_color(chosen_one.vertex);
             solution.add_to_color(chosen_one.vertex, chosen_one.color);
             tabu_list[chosen_one.vertex] = turn + solution.nb_non_empty_colors();

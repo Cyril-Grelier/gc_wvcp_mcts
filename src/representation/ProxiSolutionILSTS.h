@@ -59,11 +59,8 @@ class ProxiSolutionILSTS {
      * @brief Delete heaviest vertices from force colors
      *
      * @param force Number of deletions
-     * @param first_freeze_vertex if some vertex cannot be moved
-     * @return true if ok
-     * @return false if all deletions didn't happened
      */
-    bool unassigned_random_heavy_vertices(const int force);
+    void unassigned_random_heavy_vertices(const int force);
 
     /**
      * @brief Do a grenade operator on force random vertices
@@ -151,8 +148,6 @@ class ProxiSolutionILSTS {
     [[nodiscard]] int color(const int &vertex) const;
 
     [[nodiscard]] int score_wvcp() const;
-
-    [[nodiscard]] const std::vector<int> &free_vertices() const;
 
     [[nodiscard]] int max_weight(const int &color) const;
 

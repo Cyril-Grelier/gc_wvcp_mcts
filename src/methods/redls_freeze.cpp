@@ -79,7 +79,8 @@ bool improve_conflicts_and_score_freeze(ProxiSolutionRedLS &solution,
     std::vector<Coloration> best_colorations;
     const int delta_wvcp{std::abs(best_local_score - solution.score_wvcp())};
     int best_conflicts{0};
-    for (const auto &vertex : solution.free_vertices()) {
+    for (int vertex{solution.first_free_vertex()}; vertex < Graph::g->nb_vertices;
+         ++vertex) {
         // for each vertices in conflict
         if (tabu_list[vertex] or not solution.has_conflicts(vertex)) {
             continue;
@@ -127,7 +128,8 @@ bool improve_conflicts_freeze(ProxiSolutionRedLS &solution,
     // if with_conf is true then the vertex must not be in the tabu list
     // if with_conf is true then the chosen vertex will be tabu after the move
     std::vector<Coloration> best_colorations;
-    for (const auto &vertex : solution.free_vertices()) {
+    for (int vertex{solution.first_free_vertex()}; vertex < Graph::g->nb_vertices;
+         ++vertex) {
         if (with_conf and tabu_list[vertex]) {
             continue;
         }
@@ -164,7 +166,8 @@ bool solve_one_conflict_preserve_score_freeze(ProxiSolutionRedLS &solution,
     // the vertex will be tabu after the move
     const int delta_wvcp{best_local_score - solution.score_wvcp()};
     std::vector<int> vertices;
-    for (const auto &vertex : solution.free_vertices()) {
+    for (int vertex{solution.first_free_vertex()}; vertex < Graph::g->nb_vertices;
+         ++vertex) {
         if (tabu_list[vertex] == false and solution.has_conflicts(vertex) and
             solution.delta_wvcp_score(vertex, -1) < delta_wvcp) {
             vertices.emplace_back(vertex);

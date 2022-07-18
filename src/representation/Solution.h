@@ -40,8 +40,8 @@ class Solution {
     /** @brief List of unused colors*/
     std::vector<int> _empty_colors{};
 
-    /** @brief List of vertices to color*/
-    std::vector<int> _free_vertices{};
+    /** @brief Next vertex to color in the MCTS tree*/
+    int _first_free_vertex{0};
 
     /** @brief WVCP score*/
     int _score_wvcp{0};
@@ -122,7 +122,11 @@ class Solution {
      */
     [[nodiscard]] int delta_conflicts(const int vertex, const int color) const;
 
-    int pop_first_free_vertex();
+    /**
+     * @brief Increment the next vertex to color in the MCTS tree
+     *
+     */
+    void increment_first_free_vertex();
 
     void shuffle_non_empty_color();
 
@@ -197,13 +201,6 @@ class Solution {
     [[nodiscard]] int nb_colors() const;
 
     /**
-     * @brief Return the free_vertices list
-     *
-     * @return const std::vector<int>& the list
-     */
-    [[nodiscard]] const std::vector<int> &free_vertices() const;
-
-    /**
      * @brief Gives the score of the solution
      *
      * @return int the score
@@ -240,9 +237,9 @@ class Solution {
     [[nodiscard]] const std::vector<int> &non_empty_colors() const;
 
     /**
-     * @brief Get the number of the last placed vertex
+     * @brief Get the number of the next vertex to color in the MCTS tree
      *
-     * @return int the number of the last placed vertex
+     * @return int next vertex
      */
     [[nodiscard]] int first_free_vertex() const;
 

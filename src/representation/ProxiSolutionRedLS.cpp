@@ -140,10 +140,6 @@ int ProxiSolutionRedLS::delta_wvcp_score(const int vertex, const int color) cons
     return _solution.score_wvcp();
 }
 
-[[nodiscard]] const std::vector<int> &ProxiSolutionRedLS::free_vertices() const {
-    return _solution.free_vertices();
-}
-
 [[nodiscard]] bool ProxiSolutionRedLS::has_conflicts(const int vertex) const {
     return _solution.has_conflicts(vertex);
 }

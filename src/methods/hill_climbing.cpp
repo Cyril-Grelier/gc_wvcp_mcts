@@ -11,7 +11,7 @@ void hill_climbing_one_move(Solution &solution, const bool verbose) {
         ++turn;
         std::vector<Action> best_actions;
         int best_evaluation = solution.score_wvcp();
-        for (const auto &vertex : solution.free_vertices()) {
+        for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const auto color : solution.non_empty_colors()) {
                 if (color == solution.color(vertex) or
                     solution.conflicts_colors(color, vertex) != 0) {

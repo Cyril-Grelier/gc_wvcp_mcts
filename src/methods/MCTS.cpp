@@ -73,22 +73,19 @@ void MCTS::run() {
 
         expansion();
 
+        // simulation
         _initialization(_current_solution);
 
-        // Doesn't perform local search if less than 10%
-        // of the vertices are free to be moved
-        const bool can_perform_ls{
-            (Graph::g->nb_vertices - _current_solution.first_free_vertex()) >
-            (Graph::g->nb_vertices * 0.10)};
-        // if the simulation is depth/fit/depth_fit
-        if (_simulation and can_perform_ls) {
+        if (_simulation) {
+            // if the simulation is depth/fit/depth_fit
             _simulation(_current_solution, _local_search, helper);
-        } else // if the simulation is a simple local search
-            if (_local_search and can_perform_ls) {
+        } else if (_local_search) {
+            // if the simulation is a simple local search
             _local_search(_current_solution, false);
         }
 
         const int score_wvcp{_current_solution.score_wvcp()};
+        // update
         _current_node->update(score_wvcp);
         if (_best_solution.score_wvcp() > score_wvcp) {
             _t_best = std::chrono::high_resolution_clock::now();
@@ -157,10 +154,11 @@ void MCTS::expansion() {
 
 std::vector<Action> next_possible_moves(const Solution &solution) {
     std::vector<Action> moves;
-    if (solution.free_vertices().empty()) {
+    const int next_vertex{solution.first_free_vertex()};
+    if (next_vertex == Graph::g->nb_vertices) {
         return moves;
     }
-    const int next_vertex = solution.first_free_vertex();
+
     for (const auto color : solution.non_empty_colors()) {
         if (solution.conflicts_colors(color, next_vertex) == 0) {
             const int next_score =
@@ -181,7 +179,7 @@ std::vector<Action> next_possible_moves(const Solution &solution) {
 void apply_action(Solution &solution, const Action &action) {
     solution.add_to_color(action.vertex, action.color);
     assert(solution.first_free_vertex() == action.vertex);
-    solution.pop_first_free_vertex();
+    solution.increment_first_free_vertex();
     assert(solution.score_wvcp() == action.score);
 }
 

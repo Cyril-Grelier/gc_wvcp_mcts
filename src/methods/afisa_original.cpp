@@ -109,7 +109,7 @@ void afisa_original_tabu(Solution &solution,
             possible_colors.push_back(-1);
         }
 
-        for (const auto &vertex : solution.free_vertices()) {
+        for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const int &color : possible_colors) {
                 if (color == solution.color(vertex)) {
                     continue;

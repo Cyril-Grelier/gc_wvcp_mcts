@@ -6,25 +6,25 @@
 typedef void (*init_ptr)(Solution &solution);
 
 /**
- * @brief Greedy algorithm, that color vertices in the free_vertices order
- * and giving possibility to add a new color any time
+ * @brief Greedy algorithm, that color vertices starting with next vertex to color in the
+ * MCTS tree (0 by default) and giving possibility to add a new color any time
  *
  * @param solution solution to use, the solution will be modified
  */
 void greedy_random(Solution &solution);
 
 /**
- * @brief Greedy algorithm, color the vertices in the order of the free_vertices list,
- * if no modification on the list, the list is ordered by weights and degrees of the
- * vertices from the _r.col file of the instance
+ * @brief Greedy algorithm, color the vertices starting with next vertex to color in the
+ * MCTS tree (0 by default), add each vertex to a random color, create a new color only if
+ * needed
  *
  * @param solution solution to use, the solution will be modified
  */
 void greedy_constrained(Solution &solution);
 
 /**
- * @brief Greedy algorithm, that color vertices in the free_vertices order
- * giving the first available color to the vertex
+ * @brief Greedy algorithm, that color vertices starting with next vertex to color in the
+ * MCTS tree (0 by default) giving the first available color to the vertex
  *
  * @param solution solution to use, the solution will be modified
  */

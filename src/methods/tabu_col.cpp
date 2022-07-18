@@ -43,7 +43,7 @@ void tabu_col(Solution &best_solution, const bool verbose) {
             ++turn;
             std::vector<std::pair<int, int>> best_actions;
             int best_evaluation{std::numeric_limits<int>::max()};
-            for (const auto &vertex : working_solution.free_vertices()) {
+            for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
                 if (working_solution.has_conflicts(vertex)) {
                     for (const auto &color : working_solution.non_empty_colors()) {
                         if (color == working_solution.color(vertex)) {

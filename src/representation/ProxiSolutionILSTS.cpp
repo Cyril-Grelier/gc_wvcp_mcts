@@ -125,24 +125,12 @@ int ProxiSolutionILSTS::delete_from_color(const int vertex) {
     return _unassigned_score;
 }
 
-bool ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
+void ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
     std::uniform_int_distribution<int> distribution(0, _solution.nb_colors() - 1);
     std::vector<int> unassigned;
     _unassigned_score = _solution.score_wvcp();
-    const int first_free_vertex{_solution.first_free_vertex()};
     for (int i = 0; i < force; ++i) {
-        std::vector<int> possible_colors;
-        for (const auto &color : _solution.non_empty_colors()) {
-            const int first_vertex = *_solution.colors_vertices(color).begin();
-            if (first_vertex >= first_free_vertex)
-                possible_colors.push_back(color);
-        }
-
-        if (possible_colors.empty()) {
-            return false;
-        }
-
-        const int color{rd::choice(possible_colors)};
+        const int color{rd::choice(_solution.non_empty_colors())};
         const int old_max_weight = max_weight(color);
 
         std::vector<int> to_unassign;
@@ -164,13 +152,11 @@ bool ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
             _unassigned.emplace_back(vertex);
         }
     }
-    return true;
 }
 
 void ProxiSolutionILSTS::perturb_vertices(const int force) {
     assert(_unassigned.empty());
-    std::uniform_int_distribution<int> distribution_v(_solution.first_free_vertex(),
-                                                      Graph::g->nb_vertices - 1);
+    std::uniform_int_distribution<int> distribution_v(0, Graph::g->nb_vertices - 1);
     std::uniform_int_distribution<int> distribution_c(0, _solution.nb_colors() - 1);
 
     for (int i = 0; i < force; ++i) {
@@ -288,10 +274,6 @@ void ProxiSolutionILSTS::remove_unassigned_vertex(const int &vertex) {
 
 [[nodiscard]] int ProxiSolutionILSTS::score_wvcp() const {
     return _solution.score_wvcp();
-}
-
-[[nodiscard]] const std::vector<int> &ProxiSolutionILSTS::free_vertices() const {
-    return _solution.free_vertices();
 }
 
 [[nodiscard]] int ProxiSolutionILSTS::max_weight(const int &color) const {

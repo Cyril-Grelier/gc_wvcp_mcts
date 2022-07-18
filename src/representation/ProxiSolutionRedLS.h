@@ -55,8 +55,6 @@ class ProxiSolutionRedLS {
 
     [[nodiscard]] int score_wvcp() const;
 
-    [[nodiscard]] const std::vector<int> &free_vertices() const;
-
     [[nodiscard]] bool has_conflicts(const int vertex) const;
 
     [[nodiscard]] const std::set<int> &colors_vertices(const int &color) const;

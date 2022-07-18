@@ -13,13 +13,7 @@ int Solution::max_nb_colors = 0;
 
 const std::string Solution::header_csv = "nb_colors,penalty,score,solution";
 
-Solution::Solution()
-    : _colors(Graph::g->nb_vertices, -1), _free_vertices(Graph::g->nb_vertices) {
-    // init _free_vertices
-    int n{Graph::g->nb_vertices};
-    std::generate(_free_vertices.begin(), _free_vertices.end(), [&n] {
-        return --n;
-    });
+Solution::Solution() : _colors(Graph::g->nb_vertices, -1) {
 }
 
 int Solution::add_to_color(const int vertex, int color) {
@@ -183,10 +177,8 @@ int Solution::delete_from_color(const int vertex) {
     return _conflicts_colors[color][vertex] - _conflicts_colors[_colors[vertex]][vertex];
 }
 
-int Solution::pop_first_free_vertex() {
-    int first_free_vertex{_free_vertices.back()};
-    _free_vertices.pop_back();
-    return first_free_vertex;
+void Solution::increment_first_free_vertex() {
+    ++_first_free_vertex;
 }
 
 void Solution::shuffle_non_empty_color() {
@@ -268,10 +260,6 @@ bool Solution::check_solution() const {
     return _nb_colors;
 }
 
-[[nodiscard]] const std::vector<int> &Solution::free_vertices() const {
-    return _free_vertices;
-}
-
 [[nodiscard]] int Solution::score_wvcp() const {
     return _score_wvcp;
 }
@@ -297,7 +285,7 @@ bool Solution::check_solution() const {
 }
 
 [[nodiscard]] int Solution::first_free_vertex() const {
-    return _free_vertices.back();
+    return _first_free_vertex;
 }
 
 [[nodiscard]] std::vector<int>

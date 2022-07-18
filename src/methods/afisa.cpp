@@ -94,8 +94,8 @@ void afisa_tabu(Solution &solution,
                 const Perturbation &perturbation,
                 const std::chrono::high_resolution_clock::time_point &max_time) {
     std::vector<long> tabu_list(Graph::g->nb_vertices, 0);
-    const int turn_tabu_min{static_cast<int>(
-        0.2 * static_cast<double>(best_solution.free_vertices().size()))};
+    const int turn_tabu_min{
+        static_cast<int>(0.2 * static_cast<double>(Graph::g->nb_vertices))};
     std::uniform_int_distribution<int> distribution(0, 10);
     // tabu search loop
     long turn_tabu{0};
@@ -108,7 +108,7 @@ void afisa_tabu(Solution &solution,
         auto possible_colors{solution.non_empty_colors()};
         possible_colors.push_back(-1);
 
-        for (const auto &vertex : solution.free_vertices()) {
+        for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const int &color : possible_colors) {
                 if (color == solution.color(vertex)) {
                     continue;

@@ -97,6 +97,9 @@ std::unique_ptr<Method> parse(int argc, const char **argv) {
                 // "C2000.9"
                 // "DSJC250.5"
                 // "r1000.5"
+                // "le450_25a"
+                // "zeroin.i.3"
+                // "mulsol.i.5"
                 //
                 ));
 
@@ -148,8 +151,8 @@ std::unique_ptr<Method> parse(int argc, const char **argv) {
                 //
                 ));
 
-        // const std::string time_limit{"3600"};
-        const std::string time_limit_default{"18000"};
+        const std::string time_limit_default{"3600"};
+        // const std::string time_limit_default{"18000"};
         options.allow_unrecognised_options().add_options()(
             "t,time_limit",
             "maximum execution time in seconds",
@@ -204,14 +207,15 @@ std::unique_ptr<Method> parse(int argc, const char **argv) {
             "Local search selected",
             cxxopts::value<std::string>()->default_value(
                 //
-                // "none"
+                "none"
                 // "hill_climbing"
                 // "tabu_weight"
                 // "tabu_col"
                 // "afisa"
                 // "afisa_original"
                 // "redls"
-                "ilsts"
+                // "redls_freeze"
+                // "ilsts"
                 //
                 ));
 
@@ -220,8 +224,8 @@ std::unique_ptr<Method> parse(int argc, const char **argv) {
             "Simulation for MCTS (greedy, local_search, depth, fit, depth_fit)",
             cxxopts::value<std::string>()->default_value(
                 //
-                // "greedy"
-                "local_search"
+                "greedy"
+                // "local_search"
                 // "fit"
                 // "depth"
                 // "depth_fit"
