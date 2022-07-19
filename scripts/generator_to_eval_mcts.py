@@ -45,6 +45,8 @@ def get_target(instance: str):
 with open("instances/instance_list_wvcp.txt", "r", encoding="UTF8") as file:
     instances = [line[:-1] for line in file.readlines()]
 
+instances = ["C2000.5", "C2000.9"]
+
 problem = "wvcp"  # gcp wvcp
 method = "mcts"
 
@@ -53,7 +55,7 @@ rand_seeds = list(range(20))
 target = 0
 use_target = "false"  # false true
 objective = "optimality"  # optimality reached
-time_limit = 3600
+time_limit = 3600 * 15
 nb_max_iterations = 9000000000000000000
 initializations = [
     # "random",
@@ -63,42 +65,42 @@ initializations = [
 nb_iter_local_search = 9000000000000000000
 max_time_local_search = -1
 coeff_exploi_explo = [
-    # "0",
-    # "0.25",
-    # "0.5",
-    # "0.75",
+    "0",
+    "0.25",
+    "0.5",
+    "0.75",
     "1",
-    # "1.25",
-    # "1.5",
-    # "1.75",
-    # "2",
-    # "3",
-    # "4",
-    # "5",
+    "1.25",
+    "1.5",
+    "1.75",
+    "2",
+    "3",
+    "4",
+    "5",
 ]
 local_searchs = [
-    # "none",
+    "none",
     # "tabu_col",
     # "hill_climbing",
     # "afisa_original",
-    "afisa",
-    "tabu_weight",
-    "redls",
-    "ilsts",
+    # "afisa",
+    # "tabu_weight",
+    # "redls",
+    # "ilsts",
     # "redls_freeze",
 ]
 simulations = [
-    # "greedy",
-    "local_search",
+    "greedy",
+    # "local_search",
     # "fit",
     # "depth",
     # "depth_fit",
 ]
 O_time = 0
-P_time = 0.02
+P_time = 0  # 0.02
 
 
-output_directory = "mcts_ls_all_1h"
+output_directory = "coeff_C2000"
 
 os.mkdir(f"{output_directory}/")
 for initialization in initializations:
@@ -106,9 +108,9 @@ for initialization in initializations:
         for local_search in local_searchs:
             for simulation in simulations:
                 # for P_time in P_times:
-                os.mkdir(f"{output_directory}/{local_search}")
+                os.mkdir(f"{output_directory}/{coeff}")
 
-with open("to_eval_mcts", "w", encoding="UTF8") as file:
+with open("coeff_C2", "w", encoding="UTF8") as file:
     for initialization in initializations:
         for coeff in coeff_exploi_explo:
             for local_search in local_searchs:
@@ -135,6 +137,6 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                                 f" --simulation {simulation}"
                                 f" --O_time {O_time}"
                                 f" --P_time {P_time}"
-                                f" --output_file ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
+                                f" --output_file ../{output_directory}/{coeff}/{instance}_{rand_seed}.csv"
                                 "\n"
                             )
