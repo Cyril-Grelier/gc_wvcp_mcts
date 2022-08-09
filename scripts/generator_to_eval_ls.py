@@ -56,20 +56,21 @@ objective = "reached"  # optimality reached
 time_limit = 3600
 nb_max_iterations = 9000000000000000000
 initializations = [
-    # "random",
-    # "constrained",
+    "random",
+    "constrained",
     "deterministic",
 ]
 nb_iter_local_search = 9000000000000000000
 max_time_local_search = -1
 local_searchs = [
+    "none",
     # "tabu_col",
     # "hill_climbing",
-    "afisa_original",
+    # "afisa_original",
     # "afisa",
-    "tabu_weight",
-    "redls",
-    "ilsts",
+    # "tabu_weight",
+    # "redls",
+    # "ilsts",
     # "redls_freeze",
 ]
 
@@ -77,14 +78,14 @@ O_time = 0
 P_time = 0.02
 
 
-output_directory = "ls_all_1h"
+output_directory = "greedy_only_all"
 
 os.mkdir(f"{output_directory}/")
 for local_search in local_searchs:
     for initialization in initializations:
-        os.mkdir(f"{output_directory}/{local_search}")
+        os.mkdir(f"{output_directory}/{initialization}")
 
-with open("to_eval_mcts", "w", encoding="UTF8") as file:
+with open("to_eval_ls", "w", encoding="UTF8") as file:
     for initialization in initializations:
         for local_search in local_searchs:
             for instance in instances:
@@ -109,6 +110,6 @@ with open("to_eval_mcts", "w", encoding="UTF8") as file:
                         f" --simulation local_search"
                         f" --O_time {O_time}"
                         f" --P_time {P_time}"
-                        f" --output_file ../{output_directory}/{local_search}/{instance}_{rand_seed}.csv"
+                        f" --output_file ../{output_directory}/{initialization}/{instance}_{rand_seed}.csv"
                         "\n"
                     )

@@ -110,7 +110,7 @@ for initialization in initializations:
                 # for P_time in P_times:
                 os.mkdir(f"{output_directory}/{coeff}")
 
-with open("coeff_C2", "w", encoding="UTF8") as file:
+with open("to_eval_mcts", "w", encoding="UTF8") as file:
     for initialization in initializations:
         for coeff in coeff_exploi_explo:
             for local_search in local_searchs:

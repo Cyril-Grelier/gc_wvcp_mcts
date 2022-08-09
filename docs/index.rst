@@ -22,7 +22,6 @@ Table of Contents
     representation/parameters
     representation/method
     representation/enum
-    utils/parsing
     utils/random
     utils/utils
 ..    api/library_root

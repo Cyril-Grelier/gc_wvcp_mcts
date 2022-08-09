@@ -128,7 +128,7 @@ int Solution::delete_from_color(const int vertex) {
         }
     }
     if (available_colors.empty()) {
-        return {-1};
+        available_colors.emplace_back(-1);
     }
     return available_colors;
 }

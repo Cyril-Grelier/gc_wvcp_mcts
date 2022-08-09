@@ -1,16 +1,7 @@
 """
-Generate a xls file containing results of given methods from csv file,
-the csv file name must be in the form INSTANCE_RANDSEED.csv
+Generate a xls file containing results of given methods from csv files.
 
-example :
-    for the rand seed 4 for the instance queen10_10 :
-        queen10_10_4.csv
-
-The file must contain at least 2 columns named score and time.
-score is the best found score
-time is the time in second that took your algorithm to find the best score
-Only the last line is read so it must contain the time of the best score
-not the time of the end of the run.
+Follow the main function to manage the files and parameters
 
 Gap compute the difference on the mean of two methods and give the p-value
 with a ttest.
@@ -18,50 +9,93 @@ with a ttest.
 import statistics
 from glob import glob
 import re
-from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.cell.cell import MergedCell
-from openpyxl.styles import Alignment, Font  # , PatternFill
+from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
 from scipy import stats
 
+# Only the P_VALUE_1 will be take in account to count the number of time a method is better.
+# The two other will be colored with colors COLOR_GAP{1,2}_{1,2,3}.
+P_VALUE_1 = 0.001
+P_VALUE_2 = 0.05
+P_VALUE_3 = 0.1
+COLOR_GAP1_1 = "488f31"
+COLOR_GAP1_2 = "76a263"
+COLOR_GAP1_3 = "9fb494"
+COLOR_GAP2_1 = "de425b"
+COLOR_GAP2_2 = "dd757d"
+COLOR_GAP2_3 = "d69fa1"
+
+# When a best score is equal to the best known score : red
+COLOR_BEST = "ff0000"
+# When a best score is proven optimal : blue
+COLOR_OPTIMAL = "0000ff"
+# When a best score is better than the best known score : green
+COLOR_NEW_BEST = "00ff00"
+
 
 def main():
-    """Choose the methods, gaps and instance and create the xls file"""
+    """
+    Choose the methods, gaps and instance and create the xls file
+    """
     # Add method name, repertory of data and short name of the method
-    lss = [
-        # "tabu_col",
-        # "hill_climbing",
-        # "afisa_original",
-        # "afisa",
-        # "tabu_weight",
-        # "redls",
-        # "ilsts",
-        "random",
-        "constrained",
-        "deterministic",
+    methods: list[Method] = []
+    #
+    lss: tuple[str, str] = [
+        ("random", "Random"),
+        ("constrained", "Greedy-Random"),
+        ("deterministic", "Greedy"),
     ]
-    methods = []
-    for ls in lss:
+    for l_s in lss:
         methods.append(
             Method(
-                f"{ls}",
-                f"outputs/output_greedy/{ls}/",
-                f"{ls}",
+                f"{l_s[1]}",
+                f"outputs/greedy_only_all/{l_s[0]}/",
+                f"{l_s[1]}",
             )
         )
         methods.append(
             Method(
-                f"mcts_{ls}",
-                f"outputs/output_mcts_greedy/{ls}/",
-                f"mcts_{ls}",
+                f"MCTS+{l_s[1]}",
+                f"outputs/mcts_3_greedy/{l_s[0]}/",
+                f"MCTS+{l_s[1]}",
             )
         )
+    # lss = [
+    #     ("afisa_original", "AFISA"),
+    #     ("tabu_weight", "TabuWeight"),
+    #     ("redls", "RedLS"),
+    #     ("ilsts", "ILSTS"),
+    # ]
+    # for l_s in lss:
+    #     methods.append(
+    #         Method(
+    #             f"{l_s[1]}",
+    #             f"outputs/ls_all_1h/{l_s[0]}/",
+    #             f"{l_s[1]}",
+    #         )
+    #     )
+    #     methods.append(
+    #         Method(
+    #             f"MCTS+{l_s[1]}",
+    #             f"outputs/mcts_ls_all_1h/{l_s[0]}/",
+    #             f"MCTS+{l_s[1]}",
+    #         )
+    #     )
 
-    output_file = "xlsx_files/greedy_vs_mcts_greedy.xlsx"
+    problem = "wvcp"
+
+    # Choose the set of instances
+    instances_set = ("rxx", "rxx")
+    instances_set = ("DIMACS_optimal", "dimacs_o")
+    instances_set = ("DIMACS_non_optimal", "dimacs_no")
+    instances_set = ("instance_list_wvcp", "all")
+    instances_set = ("pxx", "pxx")
+
+    output_file = f"xlsx_files/greedy_vs_mcts_{instances_set[1]}.xlsx"
 
     # Choose the method to compare with ttest (just need the method name and short name)
     gaps = [
@@ -69,12 +103,13 @@ def main():
         for i in range(len(methods))
         for j in range(i + 1, len(methods))
     ]
-    # Choose the instances
-    with open("all_instances.txt", "r", encoding="utf8") as file:
+
+    with open(f"instances/{instances_set[0]}.txt", "r", encoding="utf8") as file:
         instances = [i[:-1] for i in file.readlines()]
 
-    t = Table(methods=methods, instances=instances, gaps=gaps)
-    t.to_xls(output_file)
+    table = Table(methods=methods, instances=instances, gaps=gaps, problem=problem)
+    table.to_xls(output_file)
+    print(output_file)
 
 
 @dataclass
@@ -98,7 +133,7 @@ class FinalResults:
     nb_best: int
     nb_total: int
 
-    def to_sheet_line(self) -> List:
+    def to_sheet_line(self) -> list:
         """
         Convert self to a list for the sheet,
         edit length_line and sheet_line_content if you edit this function
@@ -108,7 +143,7 @@ class FinalResults:
     @staticmethod
     def length_line():
         """Return number of columns for a method"""
-        return 4
+        return len(FinalResults.sheet_line_content())
 
     @staticmethod
     def sheet_line_content():
@@ -168,23 +203,23 @@ class Instance:
     nb_edges: int
     best_known_score: int
     optimal: bool
-    methods: List[Method]
-    method_optimal: Dict[str, bool]
-    raw_results: Dict[str, List[TimeScore]]
-    final_results: Dict[str, FinalResults]
-    gaps: Dict[Tuple[str, str], Gap]
+    methods: list[Method]
+    method_optimal: dict[str, bool]
+    raw_results: dict[str, list[TimeScore]]
+    final_results: dict[str, FinalResults]
+    gaps: dict[tuple[str, str], Gap]
 
     def compute_final_results(self) -> None:
         """Compute results from raw data"""
         for method in self.methods:
-            data: List[TimeScore] = self.raw_results[method.name]
+            data: list[TimeScore] = self.raw_results[method.name]
             try:
                 best_score = min([line.score for line in data])
             except TypeError:
                 best_score = 999999
-            except Exception as e:
+            except Exception as exception:
                 print("error :", self.name, method.__dict__)
-                raise e
+                raise exception
             self.final_results[method.name] = FinalResults(
                 best=best_score,
                 average=round(statistics.mean([line.score for line in data]), 1)
@@ -204,17 +239,17 @@ class Instance:
                 nb_total=len(data) if best_score != 999999 else 0,
             )
 
-    def compute_gap(self, methods_names: Tuple[Method, Method]):
+    def compute_gap(self, methods_names: tuple[Method, Method]):
         """Compute gap"""
         try:
-            s1 = [line.score for line in self.raw_results[methods_names[0].name]]
+            s_1 = [line.score for line in self.raw_results[methods_names[0].name]]
         except TypeError:
-            s1 = []
+            s_1 = []
         try:
-            s2 = [line.score for line in self.raw_results[methods_names[1].name]]
+            s_2 = [line.score for line in self.raw_results[methods_names[1].name]]
         except TypeError:
-            s2 = []
-        _, p_value = stats.ttest_ind(s1, s2)
+            s_2 = []
+        _, p_value = stats.ttest_ind(s_1, s_2)
         self.gaps[methods_names] = Gap(
             # difference=round(statistics.mean(s1) - statistics.mean(s2), 2),
             difference=round(
@@ -233,7 +268,7 @@ class Instance:
         line = [
             self.name,
             self.nb_vertices,
-            # self.nb_edges,
+            self.nb_edges,
             self.best_known_score,
             self.optimal,
         ]
@@ -246,16 +281,27 @@ class Instance:
     @staticmethod
     def length_line():
         """Return number of columns for a instance"""
-        return 4
+        return 5
 
     @staticmethod
     def sheet_line_content():
         """Header of instance"""
-        # return ["instance", "|V|", "|E|", "BKS", "optim"]
-        return ["instance", "|V|", "BKS", "optim"]
+        return ["instance", "|V|", "|E|", "BKS", "optim"]
+        # return ["instance", "|V|", "BKS", "optim"]
 
 
-def get_nb_vertices_edges(instance: str) -> Tuple[int, int]:
+def get_nb_vertices_edges(instance: str) -> tuple[int, int]:
+    """Read the number of vertices
+
+    Args:
+        instance (str): instance name
+
+    Raises:
+        Exception: Instance not found
+
+    Returns:
+        tuple[int, int]: number of vertices and number of edges
+    """
     with open("instances/instance_info.txt", "r", encoding="utf8") as file:
         for line in file.readlines():
             instance_, nb_vertices, nb_edges = line[:-1].split(",")
@@ -264,18 +310,41 @@ def get_nb_vertices_edges(instance: str) -> Tuple[int, int]:
     raise Exception(f"instance {instance} not found in instances/instance_info.txt")
 
 
-def get_best_known_score(instance: str) -> Tuple[int, bool]:
-    with open("instances/best_scores_wvcp.txt", "r", encoding="utf8") as file:
+def get_best_known_score(instance: str, problem: str) -> tuple[int, bool]:
+    """Read best know score
+
+    Args:
+        instance (str): instance name
+        problem (str): type of problem (gcp, wvcp)
+
+    Raises:
+        Exception: Instance not found
+
+    Returns:
+        tuple[int, bool]: best known score and optimality
+    """
+    file = f"instances/best_scores_{problem}.txt"
+    with open(file, "r", encoding="utf8") as file:
         for line in file.readlines():
             instance_, score, optimal = line[:-1].split(" ")
             if instance_ == instance:
-                return score, optimal == "*"
-    raise Exception(f"instance {instance} not found in instances/best_scores_wvcp.txt")
+                return int(score), optimal == "*"
+    raise Exception(f"instance {instance} not found in {file}")
 
 
-def load_instance(instance: str, methods: List[Method]) -> Instance:
+def load_instance(instance: str, methods: list[Method], problem: str) -> Instance:
+    """Load an instance by its name and each method listed
+
+    Args:
+        instance (str): instance
+        methods (list[Method]): the methods
+        problem (str): type of problem (gcp, wvcp)
+
+    Returns:
+        Instance: the loaded instance
+    """
     nb_vertices, nb_edges = get_nb_vertices_edges(instance)
-    best_known_score, optimal = get_best_known_score(instance)
+    best_known_score, optimal = get_best_known_score(instance, problem)
     return Instance(
         name=instance,
         nb_vertices=nb_vertices,
@@ -291,22 +360,24 @@ def load_instance(instance: str, methods: List[Method]) -> Instance:
 
 
 class Table:
+    """Representation of the data table"""
+
     def __init__(
         self,
-        methods: List[Method],
-        instances: List[str],
-        gaps: List[Tuple[Method, Method]],
+        methods: list[Method],
+        instances: list[str],
+        gaps: list[tuple[Method, Method]],
+        problem: str,
     ) -> None:
-        self.methods: List[Method] = methods
-        self.instances: List[Instance] = [
-            load_instance(instance, methods) for instance in instances
+        self.methods: list[Method] = methods
+        self.instances: list[Instance] = [
+            load_instance(instance, methods, problem) for instance in instances
         ]
-        self.gaps: List[Tuple[Method, Method]] = gaps
+        self.gaps: list[tuple[Method, Method]] = gaps
+        self.problem: str = problem
         for instance in self.instances:
+            print(instance.name)
             for method in self.methods:
-                # assert (
-                #     len(glob(f"{method.repertory}{instance.name}_[0-9]*.csv")) != 0
-                # ), f"files not found in {method.repertory}\nInstance : {instance.name}" # TODO check
                 # get the last line of the file and convert time and score to int
                 instance.raw_results[method.name] = [
                     TimeScore(
@@ -319,7 +390,7 @@ class Table:
                     )
                     for file_name in sorted(
                         glob(f"{method.repertory}{instance.name}_[0-9]*.csv"),
-                        key=lambda f: int(re.sub("\D", "", f)),
+                        key=lambda f: int(re.sub(r"\D", "", f)),
                     )
                 ]
                 instance.method_optimal[method.name] = False
@@ -329,7 +400,7 @@ class Table:
                 try:
                     for file_name in sorted(
                         glob(f"{method.repertory}{instance.name}_[0-9]*.csv"),
-                        key=lambda f: int(re.sub("\D", "", f)),
+                        key=lambda f: int(re.sub(r"\D", "", f)),
                     ):
                         nb_total_node, nb_current_node = (
                             pd.read_csv(file_name)[
@@ -346,16 +417,23 @@ class Table:
                 except KeyError:
                     pass
 
+        print("raw results loaded")
+        print("compute final results")
         for instance in self.instances:
             instance.compute_final_results()
+        print("compute final results done")
+        print("compute gap")
         for instance in self.instances:
             for gap in self.gaps:
                 instance.compute_gap(gap)
+        print("compute gap done")
 
     def __repr__(self) -> str:
         return "\n".join([str(instance) for instance in self.instances])
 
     def to_xls(self, file_name: str):
+        """Convert the table to xls file"""
+        print("conversion to xlsx")
         workbook = Workbook()
         sheet = workbook.active
         # first row
@@ -402,7 +480,7 @@ class Table:
         for instance in self.instances:
             sheet.append(instance.to_sheet_line())
 
-        # add bold to best scores
+        # add color to best scores
         nb_best = {method.name: 0 for method in self.methods}
         nb_optimal = {method.name: 0 for method in self.methods}
         for row, instance in enumerate(self.instances, start=3):
@@ -412,17 +490,42 @@ class Table:
                 if int(cell.value) == int(bks):
                     # red for method == best know score
                     nb_best[method.name] += 1
-                    cell.font = Font(bold=True, color="ffFF0000")
+                    cell.font = Font(bold=True, color=COLOR_BEST)
                 elif int(cell.value) < int(bks):
                     # green for method better than best know score
                     nb_best[method.name] += 1
-                    cell.font = Font(bold=True, color="ff00FF00")
+                    cell.font = Font(bold=True, color=COLOR_NEW_BEST)
                 if instance.method_optimal[method.name]:
                     # blue for proven optimal score
                     nb_optimal[method.name] += 1
                     # cell.fill = PatternFill(bgColor="FFC7CE", fill_type="solid")
-                    cell.font = Font(bold=True, color="ff0000ff")
+                    cell.font = Font(bold=True, color=COLOR_OPTIMAL)
 
+        # add color to gaps
+        begin_gap = firsts_cols + 1 + nb_col_met * len(self.methods)
+        for row in range(3, len(self.instances) + 3):
+            for col in range(len(self.gaps)):
+                diff_cell = sheet.cell(row, begin_gap + col * 2)
+                p_val_cell = sheet.cell(row, begin_gap + col * 2 + 1)
+                color = "808080"  # gray
+                if int(diff_cell.value) > 0:
+                    # 1 better
+                    if float(p_val_cell.value) <= P_VALUE_1:
+                        color = COLOR_GAP1_1
+                    elif float(p_val_cell.value) <= P_VALUE_2:
+                        color = COLOR_GAP1_2
+                    elif float(p_val_cell.value) <= P_VALUE_3:
+                        color = COLOR_GAP1_3
+                elif int(diff_cell.value) < 0:
+                    # 2 better
+                    if float(p_val_cell.value) <= P_VALUE_1:
+                        color = COLOR_GAP2_1
+                    elif float(p_val_cell.value) <= P_VALUE_2:
+                        color = COLOR_GAP2_2
+                    elif float(p_val_cell.value) <= P_VALUE_3:
+                        color = COLOR_GAP2_3
+                diff_cell.font = Font(bold=True, color=color)
+                p_val_cell.font = Font(bold=True, color=color)
         # footer
         last_line = [""] * firsts_cols
         last_line[0] = "nb total best"
@@ -434,14 +537,14 @@ class Table:
         nb_negative_gap = {gap: 0 for gap in self.gaps}
         for instance in self.instances:
             for gap_name, gap in instance.gaps.items():
-                if gap.difference < 0 and gap.p_value <= 0.001:  # p-value
+                if gap.difference < 0 and gap.p_value <= P_VALUE_1:  # p-value
                     nb_negative_gap[gap_name] += 1
-                if gap.difference > 0 and gap.p_value <= 0.001:
+                if gap.difference > 0 and gap.p_value <= P_VALUE_1:
                     nb_positive_gap[gap_name] += 1
         for gap in self.gaps:
             last_line.extend([f"{gap[1].short_name} better", nb_positive_gap[gap]])
-
         sheet.append(last_line)
+
         sheet.merge_cells(
             start_row=len(self.instances) + 3,
             end_row=len(self.instances) + 3,
@@ -480,6 +583,20 @@ class Table:
                 start_column=firsts_cols + 1 + nb_col_met * i,
                 end_column=firsts_cols + nb_col_met * (i + 1),
             )
+
+        # add color to gaps names
+        for i, row in enumerate(
+            range(len(self.instances) + 3, len(self.instances) + 5)
+        ):
+            for col in range(len(self.gaps)):
+                diff_cell = sheet.cell(row, begin_gap + col * 2)
+                p_val_cell = sheet.cell(row, begin_gap + col * 2 + 1)
+                if int(p_val_cell.value) != 0 and i == 0:
+                    diff_cell.font = Font(bold=True, color=COLOR_GAP1_1)
+                    p_val_cell.font = Font(bold=True, color=COLOR_GAP1_1)
+                elif int(p_val_cell.value) != 0 and i == 1:
+                    diff_cell.font = Font(bold=True, color=COLOR_GAP2_1)
+                    p_val_cell.font = Font(bold=True, color=COLOR_GAP2_1)
 
         nb_positive = {method: 0 for method in self.methods}
         nb_negative = {method: 0 for method in self.methods}
@@ -536,10 +653,10 @@ class Table:
         last_line[0] = "ratio better/worse"
         for i, method in enumerate(self.methods):
             try:
-                nb = f"{nb_positive[method] / nb_negative[method]:.2f}"
+                nb_to_print = f"{nb_positive[method] / nb_negative[method]:.2f}"
             except ZeroDivisionError:
-                nb = "-"
-            last_line.extend([nb] * nb_col_met)
+                nb_to_print = "-"
+            last_line.extend([nb_to_print] * nb_col_met)
 
         sheet.append(last_line)
         sheet.merge_cells(
@@ -574,7 +691,7 @@ class Table:
             sheet.column_dimensions[get_column_letter(i)].width = column_width
 
         # Freeze row and columns
-        sheet.freeze_panes = sheet["E3"]
+        sheet.freeze_panes = sheet["F3"]
 
         # Save
         workbook.save(file_name)

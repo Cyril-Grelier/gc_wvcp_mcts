@@ -53,8 +53,6 @@ void signal_handler(int signum) {
 }
 
 std::unique_ptr<Method> parse(int argc, const char **argv) {
-    // defaults values for parameters are located in representation/Parameter.cpp
-
     // analyse command line options
     try {
         // init cxxopts
@@ -146,8 +144,8 @@ std::unique_ptr<Method> parse(int argc, const char **argv) {
             "reached (optimality, reached)",
             cxxopts::value<std::string>()->default_value(
                 //
-                "optimality"
-                // "reached"
+                // "optimality"
+                "reached"
                 //
                 ));
 
