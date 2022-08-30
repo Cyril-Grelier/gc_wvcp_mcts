@@ -73,7 +73,7 @@ Note : The project must be run from the build directory as it will look for the 
 Prepare jobs for slurm
 ----------------------
 
-*After cloning the project on your cluster and following the instruction from* :ref:`Build the project`*. Don't forget to import the instances and create the python environment.*
+*After cloning the project on your cluster and following the instruction from* :ref:`Build the project` *. Don't forget to import the instances and create the python environment.*
 
 *Note : If you use slurm you may want to compile with (adapt to your cluster) :*
 
@@ -188,98 +188,98 @@ has been used and adapted to the implementation of the project,
 Organisation
 ------------
 
-.. code:: 
+.. code:: none
 
     gc_wvcp_mcts
     ├── build / build_release
-    │   ├── gc_wvcp         <- project executable
-    │   └── build directory
+    │   ├── gc_wvcp         <- project executable
+    │   └── build directory
     ├── .clang-format       <- format project
     ├── CMakeLists.txt
     ├── docs
-    │   └── documentation related folder (cd docs; make html to build)
+    │   └── documentation related folder (cd docs; make html to build)
     ├── instances
-    │   └── see https://github.com/Cyril-Grelier/gc_instances for details
+    │   └── see https://github.com/Cyril-Grelier/gc_instances for details
     ├── LICENSE
     ├── outputs
-    │   ├── coeff_C2000.tgz                          <- tests on coeff exploi explo C2000.x
-    │   ├── greedy_only_all.tgz                      <- results greedy
-    │   ├── ls_all_1h.tgz                            <- results ls
-    │   ├── mcts_3_greedy.tgz                        <- results mcts+greedy
-    │   ├── mcts_constrained_coeff_4.tgz             <- tests on coeff exploi explo
-    │   ├── mcts_ls_all_1h.tgz                       <- results mcts+ls
-    │   ├── mcts_redls_freeze_or_not.tgz             <- tests freeze or not the vertices in ls
-    │   ├── output_greedy.tgz                        <- old results
-    │   ├── output_local_search.tgz                  <- old results
-    │   ├── output_mcts_coeff_greedy_random.tgz      <- old results
-    │   ├── output_mcts_greedy.tgz                   <- old results
-    │   └── output_mcts_local_search_constrained.tgz <- old results
+    │   ├── coeff_C2000.tgz                          <- tests on coeff exploi explo C2000.x
+    │   ├── greedy_only_all.tgz                      <- results greedy
+    │   ├── ls_all_1h.tgz                            <- results ls
+    │   ├── mcts_3_greedy.tgz                        <- results mcts+greedy
+    │   ├── mcts_constrained_coeff_4.tgz             <- tests on coeff exploi explo
+    │   ├── mcts_ls_all_1h.tgz                       <- results mcts+ls
+    │   ├── mcts_redls_freeze_or_not.tgz             <- tests freeze or not the vertices in ls
+    │   ├── output_greedy.tgz                        <- old results conference article
+    │   ├── output_local_search.tgz                  <- old results conference article
+    │   ├── output_mcts_coeff_greedy_random.tgz      <- old results conference article
+    │   ├── output_mcts_greedy.tgz                   <- old results conference article
+    │   └── output_mcts_local_search_constrained.tgz <- old results conference article
     ├── plot_score_over_time_exploi_explo.ipynb
     ├── README.rst
     ├── requirements.txt
     ├── scripts
-    │   ├── build_python.sh           <- to create python environment
-    │   ├── build.sh                  <- to compile the project
-    │   ├── generate_table.py         <- to create table of results
-    │   ├── generator_to_eval_ls.py   <- to lists jobs to execute
-    │   ├── generator_to_eval_mcts.py <- to lists jobs to execute
-    │   ├── one_job_parallel.sh       <- to run a job (maybe doesn't work anymore)
-    │   ├── one_job_slurm.sh          <- to run jobs
-    │   ├── run_with_parallel.sh      <- to run jobs (maybe doesn't work anymore)
-    │   └── solution_checker.sh       <- to check a solution
+    │   ├── build_python.sh           <- to create python environment
+    │   ├── build.sh                  <- to compile the project
+    │   ├── generate_table.py         <- to create table of results
+    │   ├── generator_to_eval_ls.py   <- to lists jobs to execute
+    │   ├── generator_to_eval_mcts.py <- to lists jobs to execute
+    │   ├── one_job_parallel.sh       <- to run a job (maybe doesn't work anymore)
+    │   ├── one_job_slurm.sh          <- to run jobs
+    │   ├── run_with_parallel.sh      <- to run jobs (maybe doesn't work anymore)
+    │   └── solution_checker.sh       <- to check a solution
     ├── src
-    │   ├── main.cpp
-    │   ├── methods
-    │   │   ├── afisa.cpp
-    │   │   ├── afisa.h
-    │   │   ├── afisa_original.cpp
-    │   │   ├── afisa_original.h
-    │   │   ├── greedy.cpp
-    │   │   ├── greedy.h
-    │   │   ├── hill_climbing.cpp
-    │   │   ├── hill_climbing.h
-    │   │   ├── ilsts.cpp
-    │   │   ├── ilsts.h
-    │   │   ├── LocalSearch.cpp
-    │   │   ├── LocalSearch.h
-    │   │   ├── MCTS.cpp
-    │   │   ├── MCTS.h
-    │   │   ├── redls.cpp
-    │   │   ├── redls_freeze.cpp
-    │   │   ├── redls_freeze.h
-    │   │   ├── redls.h
-    │   │   ├── tabu_col.cpp
-    │   │   ├── tabu_col.h
-    │   │   ├── tabu_weight.cpp
-    │   │   └── tabu_weight.h
-    │   ├── representation
-    │   │   ├── enum_types.cpp
-    │   │   ├── enum_types.h
-    │   │   ├── Graph.cpp
-    │   │   ├── Graph.h
-    │   │   ├── Method.h
-    │   │   ├── Node.cpp
-    │   │   ├── Node.h
-    │   │   ├── Parameters.cpp
-    │   │   ├── Parameters.h
-    │   │   ├── ProxiSolutionILSTS.cpp
-    │   │   ├── ProxiSolutionILSTS.h
-    │   │   ├── ProxiSolutionRedLS.cpp
-    │   │   ├── ProxiSolutionRedLS.h
-    │   │   ├── Solution.cpp
-    │   │   └── Solution.h
-    │   └── utils
-    │       ├── random_generator.cpp
-    │       ├── random_generator.h
-    │       ├── utils.cpp
-    │       └── utils.h
+    │   ├── main.cpp
+    │   ├── methods
+    │   │   ├── afisa.cpp
+    │   │   ├── afisa.h
+    │   │   ├── afisa_original.cpp
+    │   │   ├── afisa_original.h
+    │   │   ├── greedy.cpp
+    │   │   ├── greedy.h
+    │   │   ├── hill_climbing.cpp
+    │   │   ├── hill_climbing.h
+    │   │   ├── ilsts.cpp
+    │   │   ├── ilsts.h
+    │   │   ├── LocalSearch.cpp
+    │   │   ├── LocalSearch.h
+    │   │   ├── MCTS.cpp
+    │   │   ├── MCTS.h
+    │   │   ├── redls.cpp
+    │   │   ├── redls_freeze.cpp
+    │   │   ├── redls_freeze.h
+    │   │   ├── redls.h
+    │   │   ├── tabu_col.cpp
+    │   │   ├── tabu_col.h
+    │   │   ├── tabu_weight.cpp
+    │   │   └── tabu_weight.h
+    │   ├── representation
+    │   │   ├── enum_types.cpp
+    │   │   ├── enum_types.h
+    │   │   ├── Graph.cpp
+    │   │   ├── Graph.h
+    │   │   ├── Method.h
+    │   │   ├── Node.cpp
+    │   │   ├── Node.h
+    │   │   ├── Parameters.cpp
+    │   │   ├── Parameters.h
+    │   │   ├── ProxiSolutionILSTS.cpp
+    │   │   ├── ProxiSolutionILSTS.h
+    │   │   ├── ProxiSolutionRedLS.cpp
+    │   │   ├── ProxiSolutionRedLS.h
+    │   │   ├── Solution.cpp
+    │   │   └── Solution.h
+    │   └── utils
+    │       ├── random_generator.cpp
+    │       ├── random_generator.h
+    │       ├── utils.cpp
+    │       └── utils.h
     ├── venv
-    │   └── python environment
+    │   └── python environment
     └── xlsx_files
         ├── greedy_vs_ls_vs_mcts_all.xlsx <- table with every methods
         ├── greedy_vs_mcts_all.xlsx       <- table with greedy and mcts+greedy
-        ├── local_search.xlsx             <- old results
+        ├── local_search.xlsx             <- old results conference article
         ├── ls_vs_mcts_all.xlsx           <- table with ls and mcts+greedy
-        ├── mcts_greedy.xlsx              <- old results
-        ├── mcts_local_search.xlsx        <- old results
+        ├── mcts_greedy.xlsx              <- old results conference article
+        ├── mcts_local_search.xlsx        <- old results conference article
         └── mcts_redls_freeze_or_not.xlsx <- table freeze vertices in ls

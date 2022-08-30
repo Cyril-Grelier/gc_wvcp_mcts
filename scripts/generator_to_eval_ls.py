@@ -29,14 +29,15 @@ Parameters :
 import os
 
 
-def get_target(instance: str):
-    with open("instances/best_scores_wvcp.txt", "r", encoding="UTF8") as file:
+def get_target(instance: str, problem: str):
+    file = f"instances/best_scores_{problem}.txt"
+    with open(file, "r", encoding="utf8") as file:
         for line in file.readlines():
-            inst, score, optim = line[:-1].split(" ")
-            if inst != instance:
+            instance_, score, optimal = line[:-1].split(" ")
+            if instance_ != instance:
                 continue
-            if optim == "*":
-                return score
+            if optimal == "*":
+                return int(score)
             return 0
     print(f"instance {instance} not found in instances/best_scores_wvcp.txt")
 
@@ -89,7 +90,7 @@ with open("to_eval_ls", "w", encoding="UTF8") as file:
     for initialization in initializations:
         for local_search in local_searchs:
             for instance in instances:
-                target = get_target(instance)
+                target = get_target(instance, problem)
                 for rand_seed in rand_seeds:
                     file.write(
                         f"./gc_wvcp "

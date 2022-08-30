@@ -43,7 +43,7 @@ def main():
     """
     # Add method name, repertory of data and short name of the method
     methods: list[Method] = []
-    #
+
     lss: tuple[str, str] = [
         ("random", "Random"),
         ("constrained", "Greedy-Random"),
@@ -64,38 +64,38 @@ def main():
                 f"MCTS+{l_s[1]}",
             )
         )
-    # lss = [
-    #     ("afisa_original", "AFISA"),
-    #     ("tabu_weight", "TabuWeight"),
-    #     ("redls", "RedLS"),
-    #     ("ilsts", "ILSTS"),
-    # ]
-    # for l_s in lss:
-    #     methods.append(
-    #         Method(
-    #             f"{l_s[1]}",
-    #             f"outputs/ls_all_1h/{l_s[0]}/",
-    #             f"{l_s[1]}",
-    #         )
-    #     )
-    #     methods.append(
-    #         Method(
-    #             f"MCTS+{l_s[1]}",
-    #             f"outputs/mcts_ls_all_1h/{l_s[0]}/",
-    #             f"MCTS+{l_s[1]}",
-    #         )
-    #     )
+    lss = [
+        ("afisa_original", "AFISA"),
+        ("tabu_weight", "TabuWeight"),
+        ("redls", "RedLS"),
+        ("ilsts", "ILSTS"),
+    ]
+    for l_s in lss:
+        methods.append(
+            Method(
+                f"{l_s[1]}",
+                f"outputs/ls_all_1h/{l_s[0]}/",
+                f"{l_s[1]}",
+            )
+        )
+        methods.append(
+            Method(
+                f"MCTS+{l_s[1]}",
+                f"outputs/mcts_ls_all_1h/{l_s[0]}/",
+                f"MCTS+{l_s[1]}",
+            )
+        )
 
     problem = "wvcp"
 
     # Choose the set of instances
-    instances_set = ("rxx", "rxx")
-    instances_set = ("DIMACS_optimal", "dimacs_o")
-    instances_set = ("DIMACS_non_optimal", "dimacs_no")
+    # instances_set = ("pxx", "pxx")
+    # instances_set = ("rxx", "rxx")
+    # instances_set = ("DIMACS_optimal", "dimacs_o")
+    # instances_set = ("DIMACS_non_optimal", "dimacs_no")
     instances_set = ("instance_list_wvcp", "all")
-    instances_set = ("pxx", "pxx")
 
-    output_file = f"xlsx_files/greedy_vs_mcts_{instances_set[1]}.xlsx"
+    output_file = f"xlsx_files/greedy_vs_ls_vs_mcts_{instances_set[1]}.xlsx"
 
     # Choose the method to compare with ttest (just need the method name and short name)
     gaps = [
@@ -508,7 +508,7 @@ class Table:
                 diff_cell = sheet.cell(row, begin_gap + col * 2)
                 p_val_cell = sheet.cell(row, begin_gap + col * 2 + 1)
                 color = "808080"  # gray
-                if int(diff_cell.value) > 0:
+                if float(diff_cell.value) > 0:
                     # 1 better
                     if float(p_val_cell.value) <= P_VALUE_1:
                         color = COLOR_GAP1_1
@@ -516,7 +516,7 @@ class Table:
                         color = COLOR_GAP1_2
                     elif float(p_val_cell.value) <= P_VALUE_3:
                         color = COLOR_GAP1_3
-                elif int(diff_cell.value) < 0:
+                elif float(diff_cell.value) < 0:
                     # 2 better
                     if float(p_val_cell.value) <= P_VALUE_1:
                         color = COLOR_GAP2_1
