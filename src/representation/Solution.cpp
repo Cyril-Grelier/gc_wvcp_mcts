@@ -14,11 +14,15 @@ int Solution::max_nb_colors = 0;
 const std::string Solution::header_csv = "nb_colors,penalty,score,solution";
 
 Solution::Solution() : _colors(Graph::g->nb_vertices, -1) {
+    for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
+        _unassigned.insert(vertex);
+    }
 }
 
 int Solution::add_to_color(const int vertex, int color) {
     assert(vertex < Graph::g->nb_vertices);
     assert(_colors[vertex] == -1);
+    assert(color == -1 or not _colors_vertices[color].empty());
 
     // if the color is -1 (ask for a new color group)
     if (color == -1) {
@@ -27,26 +31,33 @@ int Solution::add_to_color(const int vertex, int color) {
             _conflicts_colors.emplace_back(Graph::g->nb_vertices, 0);
             _colors_vertices.emplace_back();
             _heaviest_weight.emplace_back(0);
-            _non_empty_colors.push_back(_nb_colors);
+            _non_empty_colors.insert(_nb_colors);
             color = _nb_colors;
             ++_nb_colors;
         } else {
             // reuse an old color currently empty
-            color = _empty_colors.back();
-            _empty_colors.pop_back();
-            _non_empty_colors.push_back(color);
+            color = *_empty_colors.begin();
+            _empty_colors.erase(color);
+            _non_empty_colors.insert(color);
         }
     }
 
     // Update penalty
-    _penalty += _conflicts_colors[color][vertex];
+    const int conflicts = _conflicts_colors[color][vertex];
+    _penalty += conflicts;
+
+    if (conflicts > 0) {
+        _conflicting_vertices.insert(vertex);
+    }
+
+    _unassigned.erase(vertex);
 
     // update conflicts for neighbors
     for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
         ++_conflicts_colors[color][neighbor];
         // if there is a new edge in conflict
         if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
-            ++_nb_conflicting_vertices;
+            _conflicting_vertices.insert(neighbor);
         }
     }
 
@@ -65,6 +76,9 @@ int Solution::add_to_color(const int vertex, int color) {
         _heaviest_weight[color] = vertex_weight;
     }
 
+    if (_unassigned.empty() and _conflicting_vertices.empty()) {
+        _last_complete_score = _score_wvcp;
+    }
     return color;
 }
 
@@ -73,13 +87,20 @@ int Solution::delete_from_color(const int vertex) {
     assert(color != -1);
     assert(vertex < Graph::g->nb_vertices);
 
+    _unassigned.insert(vertex);
+
     // Update conflict score
+    const int conflicts = _conflicts_colors[color][vertex];
     _penalty -= _conflicts_colors[color][vertex];
+
+    if (conflicts > 0) {
+        _conflicting_vertices.erase(vertex);
+    }
 
     // update conflicts for neighbors
     for (const int neighbor : Graph::g->neighborhood[vertex]) {
         if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
-            --_nb_conflicting_vertices;
+            _conflicting_vertices.erase(neighbor);
         }
         --_conflicts_colors[color][neighbor];
     }
@@ -100,12 +121,8 @@ int Solution::delete_from_color(const int vertex) {
 
     // delete color if needed
     if (_colors_vertices[color].empty()) {
-        const auto it =
-            std::find(_non_empty_colors.begin(), _non_empty_colors.end(), color);
-        _non_empty_colors[std::distance(_non_empty_colors.begin(), it)] =
-            _non_empty_colors.back();
-        _non_empty_colors.pop_back();
-        _empty_colors.push_back(color);
+        _non_empty_colors.erase(color);
+        _empty_colors.insert(color);
     }
 
     return color;
@@ -131,6 +148,58 @@ int Solution::delete_from_color(const int vertex) {
         available_colors.emplace_back(-1);
     }
     return available_colors;
+}
+
+void Solution::clean_conflicts() {
+    while (not _conflicting_vertices.empty()) {
+        int nb_max_conflicts = 0;
+        std::vector<int> max_vertex;
+        for (const int vertex : _conflicting_vertices) {
+            const int nb_conflicts = _conflicts_colors[_colors[vertex]][vertex];
+            if (nb_conflicts < nb_max_conflicts) {
+                continue;
+            }
+            if (nb_conflicts > nb_max_conflicts) {
+                nb_max_conflicts = nb_conflicts;
+                max_vertex.clear();
+            }
+            max_vertex.emplace_back(vertex);
+        }
+        delete_from_color(rd::choice(max_vertex));
+    }
+}
+
+void Solution::remove_one_color_and_create_conflicts() {
+    // TODO can be improved by moving the vertices to the color where
+    // they have the least conflicts
+
+    // look for the best color group to relocate them in an
+    // other color without having too much conflicts
+    int best_sum_conflicts = Graph::g->nb_vertices;
+    int best_color1 = -1;
+    int best_color2 = -1;
+    for (const auto &color1 : _non_empty_colors) {
+        for (const auto &color2 : _non_empty_colors) {
+            if (color1 == color2) {
+                continue;
+            }
+            int sum_conflicts{0};
+            for (const int vertex : _colors_vertices[color1]) {
+                sum_conflicts += _conflicts_colors[color2][vertex];
+            }
+            if (sum_conflicts < best_sum_conflicts) {
+                best_color1 = color1;
+                best_color2 = color2;
+                best_sum_conflicts = sum_conflicts;
+            }
+        }
+    }
+    // delete the vertices in the color and relocate them in the second color
+    const auto to_delete = _colors_vertices[best_color1];
+    for (const auto vertex : to_delete) {
+        delete_from_color(vertex);
+        add_to_color(vertex, best_color2);
+    }
 }
 
 [[nodiscard]] int Solution::delta_wvcp_score_old_color(const int vertex) const {
@@ -181,8 +250,26 @@ void Solution::increment_first_free_vertex() {
     ++_first_free_vertex;
 }
 
-void Solution::shuffle_non_empty_color() {
-    std::shuffle(_non_empty_colors.begin(), _non_empty_colors.end(), rd::generator);
+void Solution::reorganize_colors() {
+    if (_empty_colors.empty()) {
+        return;
+    }
+    // the first empty color must be higher than the last non empty color
+    int first_not_used = *_empty_colors.begin();
+    int last_used = *_non_empty_colors.rbegin();
+    while (first_not_used < last_used) {
+        int last_color = (*_non_empty_colors.rbegin());
+        auto vertices = _colors_vertices[last_color];
+        for (const int vertex : vertices) {
+            delete_from_color(vertex);
+        }
+        int color = -1;
+        for (const int vertex : vertices) {
+            color = add_to_color(vertex, color);
+        }
+        first_not_used = *_empty_colors.begin();
+        last_used = *_non_empty_colors.rbegin();
+    }
 }
 
 bool Solution::check_solution() const {
@@ -233,6 +320,9 @@ bool Solution::check_solution() const {
 }
 
 [[nodiscard]] bool Solution::has_conflicts(const int vertex) const {
+    if (_colors[vertex] == -1) {
+        return 0;
+    }
     return _conflicts_colors[_colors[vertex]][vertex] != 0;
 }
 
@@ -280,7 +370,7 @@ bool Solution::check_solution() const {
     return static_cast<long>(_non_empty_colors.size());
 }
 
-[[nodiscard]] const std::vector<int> &Solution::non_empty_colors() const {
+[[nodiscard]] const std::set<int> &Solution::non_empty_colors() const {
     return _non_empty_colors;
 }
 
@@ -296,6 +386,7 @@ Solution::nb_vertices_per_color(const int nb_colors_max) const {
     }
     return nb_colors_per_col;
 }
+
 [[nodiscard]] std::vector<std::vector<int>> Solution::weights() const {
     std::vector<std::vector<int>> weights(_nb_colors);
     for (int color{0}; color < _nb_colors; ++color) {
@@ -307,8 +398,25 @@ Solution::nb_vertices_per_color(const int nb_colors_max) const {
     }
     return weights;
 }
+
 [[nodiscard]] const std::vector<std::vector<int>> &Solution::conflicts_colors() const {
     return _conflicts_colors;
+}
+
+[[nodiscard]] const std::set<int> &Solution::conflicting_vertices() const {
+    return _conflicting_vertices;
+}
+
+[[nodiscard]] const std::set<int> &Solution::unassigned() const {
+    return _unassigned;
+}
+
+[[nodiscard]] int Solution::next_unassigned() const {
+    return *_unassigned.begin();
+}
+
+[[nodiscard]] int Solution::last_complete_score() const {
+    return _last_complete_score;
 }
 
 [[nodiscard]] int distance_approximation(const Solution &sol1, const Solution &sol2) {

@@ -102,11 +102,11 @@ void afisa_tabu(Solution &solution,
     while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn_tabu < turns) {
         turn_tabu++;
-        std::vector<Action> best_actions;
+        std::vector<Coloration> best_coloration;
         int best_evaluation{std::numeric_limits<int>::max()};
 
         auto possible_colors{solution.non_empty_colors()};
-        possible_colors.push_back(-1);
+        possible_colors.insert(-1);
 
         for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const int &color : possible_colors) {
@@ -120,19 +120,19 @@ void afisa_tabu(Solution &solution,
                 if ((test_score < best_evaluation and tabu_list[vertex] <= turn_tabu) or
                     (test_score < best_solution.score_wvcp() and
                      (solution.penalty() + delta_penalty == 0))) {
-                    best_actions.clear();
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.clear();
+                    best_coloration.emplace_back(Coloration{vertex, color});
                     best_evaluation = test_score;
                 } else if (test_score == best_evaluation and
                            (tabu_list[vertex] <= turn_tabu or
                             (test_score < best_solution.score_wvcp() and
                              (solution.penalty() + delta_penalty == 0)))) {
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.emplace_back(Coloration{vertex, color});
                 }
             }
         }
-        if (not best_actions.empty()) {
-            const Action chosen_one{rd::choice(best_actions)};
+        if (not best_coloration.empty()) {
+            const Coloration chosen_one{rd::choice(best_coloration)};
             solution.delete_from_color(chosen_one.vertex);
             solution.add_to_color(chosen_one.vertex, chosen_one.color);
 

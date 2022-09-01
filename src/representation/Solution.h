@@ -33,12 +33,20 @@ class Solution {
     /** @brief For each color, for each vertex, number of neighbors in the color*/
     std::vector<std::vector<int>> _conflicts_colors{};
 
+    /** @brief Set of unassigned vertices*/
+    std::set<int> _unassigned{};
+    /** @brief Last score when all vertices were colored*/
+    int _last_complete_score;
+
     /** @brief number of opened colors (not automaticaly all used)*/
     int _nb_colors{0};
     /** @brief List of used colors*/
-    std::vector<int> _non_empty_colors{};
+    std::set<int> _non_empty_colors{};
     /** @brief List of unused colors*/
-    std::vector<int> _empty_colors{};
+    std::set<int> _empty_colors{};
+
+    /** @brief Set of vertex in conflict*/
+    std::set<int> _conflicting_vertices{};
 
     /** @brief Next vertex to color in the MCTS tree*/
     int _first_free_vertex{0};
@@ -48,8 +56,6 @@ class Solution {
 
     /** @brief number of conflicts in the current solution (conflicting edges)*/
     int _penalty{0};
-    /** @brief number of conflicting vertices*/
-    int _nb_conflicting_vertices{0};
 
   public:
     /**
@@ -95,6 +101,14 @@ class Solution {
 
     [[nodiscard]] std::vector<int> available_colors(const int &vertex) const;
 
+    void clean_conflicts();
+
+    /**
+     * @brief Remove one color and create conflicts
+     *
+     */
+    void remove_one_color_and_create_conflicts();
+
     /**
      * @brief Compute the difference on the score if the vertex is colored with the color
      *
@@ -128,7 +142,11 @@ class Solution {
      */
     void increment_first_free_vertex();
 
-    void shuffle_non_empty_color();
+    /**
+     * @brief all used colors are the firsts ones
+     *
+     */
+    void reorganize_colors();
 
     /**
      * @brief Check the validity of the solution
@@ -232,9 +250,9 @@ class Solution {
     /**
      * @brief Return non empty colors
      *
-     * @return const std::vector<int>& non empty colors
+     * @return const std::set<int>& non empty colors
      */
-    [[nodiscard]] const std::vector<int> &non_empty_colors() const;
+    [[nodiscard]] const std::set<int> &non_empty_colors() const;
 
     /**
      * @brief Get the number of the next vertex to color in the MCTS tree
@@ -266,6 +284,14 @@ class Solution {
     [[nodiscard]] std::vector<std::vector<int>> weights() const;
 
     [[nodiscard]] const std::vector<std::vector<int>> &conflicts_colors() const;
+
+    [[nodiscard]] const std::set<int> &conflicting_vertices() const;
+
+    [[nodiscard]] const std::set<int> &unassigned() const;
+
+    [[nodiscard]] int next_unassigned() const;
+
+    [[nodiscard]] int last_complete_score() const;
 };
 
 /**

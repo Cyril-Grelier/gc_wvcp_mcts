@@ -100,7 +100,11 @@ bool M_1_2_3(ProxiSolutionILSTS &solution, const long iter, std::vector<long> &t
     int min_vertex{-1};
     int min_cost{Graph::g->nb_vertices};
     int min_color = -1;
-    std::vector<int> non_empty_colors = solution.non_empty_colors();
+    std::vector<int> non_empty_colors;
+    non_empty_colors.reserve(solution.non_empty_colors().size());
+    for (const int color : solution.non_empty_colors()) {
+        non_empty_colors.emplace_back(color);
+    }
     shuffle(non_empty_colors.begin(), non_empty_colors.end(), rd::generator);
     for (const auto &vertex : solution.unassigned()) {
         const int vertex_weight{Graph::g->weights[vertex]};

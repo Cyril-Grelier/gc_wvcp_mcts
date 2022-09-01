@@ -25,7 +25,6 @@ void redls(Solution &solution, const bool verbose = false);
  * @return bool true if a move have been applied
  */
 bool improve_conflicts_and_score(ProxiSolutionRedLS &solution,
-                                 const int best_local_score,
                                  std::vector<bool> &tabu_list);
 
 /**
@@ -47,7 +46,6 @@ bool improve_conflicts(ProxiSolutionRedLS &solution,
  * @return bool true if a move have been applied
  */
 bool solve_one_conflict_preserve_score(ProxiSolutionRedLS &solution,
-                                       const int best_local_score,
                                        std::vector<bool> &tabu_list);
 
 /**
@@ -60,6 +58,4 @@ void move_heaviest_vertices(ProxiSolutionRedLS &solution);
 /**
  * @brief Apply list of moves selected by Rule 2 (RedLS)
  */
-void solve_one_conflict(ProxiSolutionRedLS &solution,
-                        const int best_local_score,
-                        std::vector<bool> &tabu_list);
+void solve_one_conflict(ProxiSolutionRedLS &solution, std::vector<bool> &tabu_list);

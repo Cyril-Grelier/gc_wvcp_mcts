@@ -146,7 +146,6 @@ void ProxiSolutionILSTS::unassigned_random_heavy_vertices(const int force) {
     }
 
     std::shuffle(unassigned.begin(), unassigned.end(), rd::generator);
-    _solution.shuffle_non_empty_color();
     for (const int &vertex : unassigned) {
         if (not random_assignment_constrained(vertex)) {
             _unassigned.emplace_back(vertex);
@@ -264,7 +263,7 @@ void ProxiSolutionILSTS::remove_unassigned_vertex(const int &vertex) {
     return _solution;
 }
 
-[[nodiscard]] const std::vector<int> &ProxiSolutionILSTS::non_empty_colors() const {
+[[nodiscard]] const std::set<int> &ProxiSolutionILSTS::non_empty_colors() const {
     return _solution.non_empty_colors();
 }
 

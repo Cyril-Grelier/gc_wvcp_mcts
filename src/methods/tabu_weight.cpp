@@ -19,7 +19,7 @@ void tabu_weight(Solution &best_solution, const bool verbose) {
         std::vector<Coloration> best_coloration;
         int best_evaluation{std::numeric_limits<int>::max()};
         auto possible_colors{solution.non_empty_colors()};
-        possible_colors.push_back(-1);
+        possible_colors.insert(-1);
         for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const int &color : possible_colors) {
                 if (color == solution.color(vertex) or

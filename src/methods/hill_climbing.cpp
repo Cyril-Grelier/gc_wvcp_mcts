@@ -9,7 +9,7 @@ void hill_climbing_one_move(Solution &solution, const bool verbose) {
     while (not Parameters::p->time_limit_reached() and
            solution.score_wvcp() != Parameters::p->target) {
         ++turn;
-        std::vector<Action> best_actions;
+        std::vector<Coloration> best_coloration;
         int best_evaluation = solution.score_wvcp();
         for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             for (const auto color : solution.non_empty_colors()) {
@@ -20,18 +20,19 @@ void hill_climbing_one_move(Solution &solution, const bool verbose) {
                 const int test_score{solution.score_wvcp() +
                                      solution.delta_wvcp_score(vertex, color)};
                 if (test_score < best_evaluation) {
-                    best_actions.clear();
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.clear();
+                    best_coloration.emplace_back(Coloration{vertex, color});
                     best_evaluation = test_score;
-                } else if (test_score == best_evaluation and not best_actions.empty()) {
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                } else if (test_score == best_evaluation and
+                           not best_coloration.empty()) {
+                    best_coloration.emplace_back(Coloration{vertex, color});
                 }
             }
         }
-        if (best_actions.empty()) {
+        if (best_coloration.empty()) {
             return;
         }
-        const Action chosen_one{rd::choice(best_actions)};
+        const Coloration chosen_one{rd::choice(best_coloration)};
         solution.delete_from_color(chosen_one.vertex);
         solution.add_to_color(chosen_one.vertex, chosen_one.color);
         if (verbose) {

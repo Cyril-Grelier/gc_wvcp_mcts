@@ -101,12 +101,12 @@ void afisa_original_tabu(Solution &solution,
     while (not Parameters::p->time_limit_reached_sub_method(max_time) and
            turn_tabu < turns) {
         turn_tabu++;
-        std::vector<Action> best_actions;
+        std::vector<Coloration> best_coloration;
         int best_evaluation{std::numeric_limits<int>::max()};
 
         auto possible_colors{solution.non_empty_colors()};
         if (static_cast<int>(possible_colors.size()) < nb_max_colors) {
-            possible_colors.push_back(-1);
+            possible_colors.insert(-1);
         }
 
         for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
@@ -126,21 +126,21 @@ void afisa_original_tabu(Solution &solution,
                      tabu_matrix[vertex][color] <= turn_tabu) or
                     (test_score < best_solution.score_wvcp() and
                      (solution.penalty() + delta_penalty == 0))) {
-                    best_actions.clear();
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.clear();
+                    best_coloration.emplace_back(Coloration{vertex, color});
                     best_evaluation = test_score;
                 } else if (test_score == best_evaluation and
                            (tabu_matrix[vertex][color] <= turn_tabu or
                             (test_score < best_solution.score_wvcp() and
                              (solution.penalty() + delta_penalty == 0)))) {
-                    best_actions.emplace_back(Action{vertex, color, test_score});
+                    best_coloration.emplace_back(Coloration{vertex, color});
                 }
             }
         }
         // check if a best move if found (may be empty depending on the size of the tabu
         // list)
-        if (not best_actions.empty()) {
-            const Action chosen_one{rd::choice(best_actions)};
+        if (not best_coloration.empty()) {
+            const Coloration chosen_one{rd::choice(best_coloration)};
             const int old_color{solution.delete_from_color(chosen_one.vertex)};
             solution.add_to_color(chosen_one.vertex, chosen_one.color);
 
