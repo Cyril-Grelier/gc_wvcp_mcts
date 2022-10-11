@@ -14,9 +14,6 @@ int Solution::max_nb_colors = 0;
 const std::string Solution::header_csv = "nb_colors,penalty,score,solution";
 
 Solution::Solution() : _colors(Graph::g->nb_vertices, -1) {
-    for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
-        _unassigned.insert(vertex);
-    }
 }
 
 int Solution::add_to_color(const int vertex, int color) {
@@ -31,33 +28,26 @@ int Solution::add_to_color(const int vertex, int color) {
             _conflicts_colors.emplace_back(Graph::g->nb_vertices, 0);
             _colors_vertices.emplace_back();
             _heaviest_weight.emplace_back(0);
-            _non_empty_colors.insert(_nb_colors);
+            _non_empty_colors.push_back(_nb_colors);
             color = _nb_colors;
             ++_nb_colors;
         } else {
             // reuse an old color currently empty
-            color = *_empty_colors.begin();
-            _empty_colors.erase(color);
-            _non_empty_colors.insert(color);
+            color = _empty_colors.back();
+            _empty_colors.pop_back();
+            _non_empty_colors.push_back(color);
         }
     }
 
     // Update penalty
-    const int conflicts = _conflicts_colors[color][vertex];
-    _penalty += conflicts;
-
-    if (conflicts > 0) {
-        _conflicting_vertices.insert(vertex);
-    }
-
-    _unassigned.erase(vertex);
+    _penalty += _conflicts_colors[color][vertex];
 
     // update conflicts for neighbors
     for (const auto &neighbor : Graph::g->neighborhood[vertex]) {
         ++_conflicts_colors[color][neighbor];
         // if there is a new edge in conflict
         if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
-            _conflicting_vertices.insert(neighbor);
+            ++_nb_conflicting_vertices;
         }
     }
 
@@ -76,9 +66,6 @@ int Solution::add_to_color(const int vertex, int color) {
         _heaviest_weight[color] = vertex_weight;
     }
 
-    if (_unassigned.empty() and _conflicting_vertices.empty()) {
-        _last_complete_score = _score_wvcp;
-    }
     return color;
 }
 
@@ -87,20 +74,13 @@ int Solution::delete_from_color(const int vertex) {
     assert(color != -1);
     assert(vertex < Graph::g->nb_vertices);
 
-    _unassigned.insert(vertex);
-
     // Update conflict score
-    const int conflicts = _conflicts_colors[color][vertex];
     _penalty -= _conflicts_colors[color][vertex];
-
-    if (conflicts > 0) {
-        _conflicting_vertices.erase(vertex);
-    }
 
     // update conflicts for neighbors
     for (const int neighbor : Graph::g->neighborhood[vertex]) {
         if (color == _colors[neighbor] and _conflicts_colors[color][neighbor] == 1) {
-            _conflicting_vertices.erase(neighbor);
+            --_nb_conflicting_vertices;
         }
         --_conflicts_colors[color][neighbor];
     }
@@ -121,8 +101,12 @@ int Solution::delete_from_color(const int vertex) {
 
     // delete color if needed
     if (_colors_vertices[color].empty()) {
-        _non_empty_colors.erase(color);
-        _empty_colors.insert(color);
+        const auto it =
+            std::find(_non_empty_colors.begin(), _non_empty_colors.end(), color);
+        _non_empty_colors[std::distance(_non_empty_colors.begin(), it)] =
+            _non_empty_colors.back();
+        _non_empty_colors.pop_back();
+        _empty_colors.push_back(color);
     }
 
     return color;
@@ -145,17 +129,20 @@ int Solution::delete_from_color(const int vertex) {
         }
     }
     if (available_colors.empty()) {
-        available_colors.emplace_back(-1);
+        return {-1};
     }
     return available_colors;
 }
 
 void Solution::clean_conflicts() {
-    while (not _conflicting_vertices.empty()) {
+    while (_nb_conflicting_vertices != 0) {
         int nb_max_conflicts = 0;
         std::vector<int> max_vertex;
-        for (const int vertex : _conflicting_vertices) {
+        for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
             const int nb_conflicts = _conflicts_colors[_colors[vertex]][vertex];
+            if (nb_conflicts == 0) {
+                continue;
+            }
             if (nb_conflicts < nb_max_conflicts) {
                 continue;
             }
@@ -370,7 +357,7 @@ bool Solution::check_solution() const {
     return static_cast<long>(_non_empty_colors.size());
 }
 
-[[nodiscard]] const std::set<int> &Solution::non_empty_colors() const {
+[[nodiscard]] const std::vector<int> &Solution::non_empty_colors() const {
     return _non_empty_colors;
 }
 
@@ -403,22 +390,9 @@ Solution::nb_vertices_per_color(const int nb_colors_max) const {
     return _conflicts_colors;
 }
 
-[[nodiscard]] const std::set<int> &Solution::conflicting_vertices() const {
-    return _conflicting_vertices;
+int Solution::nb_conflicting_vertices() const {
+    return _nb_conflicting_vertices;
 }
-
-[[nodiscard]] const std::set<int> &Solution::unassigned() const {
-    return _unassigned;
-}
-
-[[nodiscard]] int Solution::next_unassigned() const {
-    return *_unassigned.begin();
-}
-
-[[nodiscard]] int Solution::last_complete_score() const {
-    return _last_complete_score;
-}
-
 [[nodiscard]] int distance_approximation(const Solution &sol1, const Solution &sol2) {
     const int max_k{std::max(sol1.nb_colors(), sol2.nb_colors()) + 1};
     std::vector<std::vector<int>> same_color(max_k, std::vector<int>(max_k, 0));

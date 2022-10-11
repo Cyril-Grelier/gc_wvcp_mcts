@@ -143,7 +143,7 @@ class ProxiSolutionILSTS {
 
     // Getters to original solution
 
-    [[nodiscard]] const std::set<int> &non_empty_colors() const;
+    [[nodiscard]] const std::vector<int> &non_empty_colors() const;
 
     [[nodiscard]] int color(const int &vertex) const;
 

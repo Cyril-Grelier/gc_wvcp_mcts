@@ -49,17 +49,19 @@ void redls(Solution &best_solution, const bool verbose) {
             }
         }
 
-        if (not improve_conflicts_and_score(solution, tabu_list)) {
+        if (not improve_conflicts_and_score(
+                solution, best_solution.score_wvcp(), tabu_list)) {
 
             while (improve_conflicts(solution, true, tabu_list)) {
                 assert(solution.check_solution());
             }
 
-            if (not solve_one_conflict_preserve_score(solution, tabu_list)) {
+            if (not solve_one_conflict_preserve_score(
+                    solution, best_solution.score_wvcp(), tabu_list)) {
                 // Increments edge weight
                 solution.increment_edge_weights();
                 if (not solution.conflict_edges().empty()) {
-                    solve_one_conflict(solution, tabu_list);
+                    solve_one_conflict(solution, best_solution.score_wvcp(), tabu_list);
                 }
             }
             assert(solution.check_solution());
@@ -71,14 +73,14 @@ void redls(Solution &best_solution, const bool verbose) {
 }
 
 bool improve_conflicts_and_score(ProxiSolutionRedLS &solution,
+                                 const int best_local_score,
                                  std::vector<bool> &tabu_list) {
     std::vector<Coloration> best_colorations;
-    const int delta_wvcp{
-        std::abs(solution.last_complete_score() - solution.score_wvcp())};
+    const int delta_wvcp{std::abs(best_local_score - solution.score_wvcp())};
     int best_conflicts{0};
-    for (const int vertex : solution.conflicting_vertices()) {
-        // for each vertices in conflict and not tabu
-        if (tabu_list[vertex]) {
+    for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
+        // for each vertices in conflict
+        if (tabu_list[vertex] or not solution.has_conflicts(vertex)) {
             continue;
         }
         for (const auto &color : solution.non_empty_colors()) {
@@ -154,14 +156,15 @@ bool improve_conflicts(ProxiSolutionRedLS &solution,
 }
 
 bool solve_one_conflict_preserve_score(ProxiSolutionRedLS &solution,
+                                       const int best_local_score,
                                        std::vector<bool> &tabu_list) {
     // select all non tabu vertices in conflict that keep the wvcp
     // score lower than the best found score
     // the vertex will be tabu after the move
-    const int delta_wvcp{solution.last_complete_score() - solution.score_wvcp()};
+    const int delta_wvcp{best_local_score - solution.score_wvcp()};
     std::vector<int> vertices;
-    for (const int vertex : solution.conflicting_vertices()) {
-        if (tabu_list[vertex] == false and
+    for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
+        if (tabu_list[vertex] == false and solution.has_conflicts(vertex) and
             solution.delta_wvcp_score(vertex, -1) < delta_wvcp) {
             vertices.emplace_back(vertex);
         }
@@ -231,11 +234,13 @@ void move_heaviest_vertices(ProxiSolutionRedLS &solution) {
     }
 }
 
-void solve_one_conflict(ProxiSolutionRedLS &solution, std::vector<bool> &tabu_list) {
+void solve_one_conflict(ProxiSolutionRedLS &solution,
+                        const int best_local_score,
+                        std::vector<bool> &tabu_list) {
     // Pick a random pair of vertices in conflicts and find the best move
     // possibly improving the score and the number of vertices in conflicts
     // otherwise a random move in a random color
-    const int delta_wvcp{solution.last_complete_score() - solution.score_wvcp()};
+    const int delta_wvcp{best_local_score - solution.score_wvcp()};
     Coloration best_coloration{-1, -1};
     const auto &[v1, v2]{rd::choice(solution.conflict_edges())};
     int best_score_conflicts{0};

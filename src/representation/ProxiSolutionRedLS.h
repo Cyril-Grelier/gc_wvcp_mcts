@@ -49,7 +49,7 @@ class ProxiSolutionRedLS {
 
     int delta_wvcp_score(const int vertex, const int color) const;
 
-    [[nodiscard]] const std::set<int> &non_empty_colors() const;
+    [[nodiscard]] const std::vector<int> &non_empty_colors() const;
 
     [[nodiscard]] int color(const int &vertex) const;
 
@@ -62,8 +62,4 @@ class ProxiSolutionRedLS {
     [[nodiscard]] int max_weight(const int &color) const;
 
     [[nodiscard]] int first_free_vertex() const;
-
-    [[nodiscard]] const std::set<int> &conflicting_vertices() const;
-
-    [[nodiscard]] int last_complete_score() const;
 };

@@ -106,7 +106,7 @@ void afisa_original_tabu(Solution &solution,
 
         auto possible_colors{solution.non_empty_colors()};
         if (static_cast<int>(possible_colors.size()) < nb_max_colors) {
-            possible_colors.insert(-1);
+            possible_colors.push_back(-1);
         }
 
         for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {

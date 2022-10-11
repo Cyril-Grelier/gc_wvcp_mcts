@@ -25,7 +25,7 @@ void tabu_col(Solution &best_solution, const bool verbose) {
            turn_main < Parameters::p->nb_iter_local_search) {
 
         ++turn_main;
-        if (solution.conflicting_vertices().empty()) {
+        if (solution.nb_conflicting_vertices() == 0) {
             solution.remove_one_color_and_create_conflicts();
         }
         int best_found{solution.penalty()};
@@ -41,7 +41,11 @@ void tabu_col(Solution &best_solution, const bool verbose) {
             int best_current{std::numeric_limits<int>::max()};
             std::vector<Coloration> best_colorations;
 
-            for (const int vertex : solution.conflicting_vertices()) {
+            for (int vertex{0}; vertex < Graph::g->nb_vertices; ++vertex) {
+                // for each vertices in conflict
+                if (not solution.has_conflicts(vertex)) {
+                    continue;
+                }
                 for (const auto &color : solution.non_empty_colors()) {
                     if (color == solution.color(vertex)) {
                         continue;

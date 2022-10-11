@@ -128,7 +128,7 @@ int ProxiSolutionRedLS::delta_wvcp_score(const int vertex, const int color) cons
     return _solution.delta_wvcp_score(vertex, color);
 }
 
-[[nodiscard]] const std::set<int> &ProxiSolutionRedLS::non_empty_colors() const {
+[[nodiscard]] const std::vector<int> &ProxiSolutionRedLS::non_empty_colors() const {
     return _solution.non_empty_colors();
 }
 
@@ -155,12 +155,4 @@ ProxiSolutionRedLS::colors_vertices(const int &color) const {
 
 [[nodiscard]] int ProxiSolutionRedLS::first_free_vertex() const {
     return _solution.first_free_vertex();
-}
-
-[[nodiscard]] const std::set<int> &ProxiSolutionRedLS::conflicting_vertices() const {
-    return _solution.conflicting_vertices();
-}
-
-[[nodiscard]] int ProxiSolutionRedLS::last_complete_score() const {
-    return _solution.last_complete_score();
 }

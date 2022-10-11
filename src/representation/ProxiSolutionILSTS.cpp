@@ -263,7 +263,7 @@ void ProxiSolutionILSTS::remove_unassigned_vertex(const int &vertex) {
     return _solution;
 }
 
-[[nodiscard]] const std::set<int> &ProxiSolutionILSTS::non_empty_colors() const {
+[[nodiscard]] const std::vector<int> &ProxiSolutionILSTS::non_empty_colors() const {
     return _solution.non_empty_colors();
 }
 
