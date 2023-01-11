@@ -3,9 +3,9 @@ Graph Coloring - Weighted Vertex Coloring Problem - Monte Carlo Tree Search
 
 |GitHub license|
 
-.. |GitHub license| image:: https://img.shields.io/github/license/Naereen/StrapDown.js.svg
-   :target: https://github.com/Naereen/StrapDown.js/blob/master/LICENSE
-   
+.. |GitHub license| image:: https://img.shields.io/github/license/Cyril-Grelier/gc_wvcp_mcts
+   :target: https://github.com/Cyril-Grelier/gc_wvcp_mcts/blob/master/LICENSE
+
 This project proposes several local searches and an MCTS algorithm for the weighted vertex coloring problem (WVCP).
 
 This problem is a variant of the Graph Coloring Problem. Given a weighted graph :math:`G=(V,E)`, the set of vertices :math:`V`, the set of edges :math:`E` and let :math:`W` be the set of weights :math:`w(v)` associated to each vertex :math:`v` in :math:`V`, the WVCP consists in finding a partition of the vertices :math:`V` in into :math:`k` color groups :math:`S=(V_1,...,Vk)` :math:`(1 \leq k \leq |V|)` such that no adjacent vertices belong to the same color group and such that the objective function :math:`f(S) = \sum_{i=1}^{k}\max_{v\in V_i}{w(v)}` is minimized.
