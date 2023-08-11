@@ -8,6 +8,7 @@ Graph Coloring - Weighted Vertex Coloring Problem - Monte Carlo Tree Search
 
 
 .. warning::
+
    Prefer using this projet : https://github.com/Cyril-Grelier/gc_wvcp_adaptive_mcts
    The code have been optimized and bugs have been corrected.
    It also include the code of hyperheuristics for the MCTS.
