@@ -7,11 +7,10 @@ Graph Coloring - Weighted Vertex Coloring Problem - Monte Carlo Tree Search
    :target: https://github.com/Cyril-Grelier/gc_wvcp_mcts/blob/master/LICENSE
 
 
-.. warning::
-
-   Prefer using this projet : https://github.com/Cyril-Grelier/gc_wvcp_adaptive_mcts
-   The code have been optimized and bugs have been corrected.
-   It also include the code of hyperheuristics for the MCTS.
+**warning :**
+   **Prefer using this projet : https://github.com/Cyril-Grelier/gc_wvcp_adaptive_mcts**
+   **The code have been optimized and bugs have been corrected.**
+   **It also include the code of hyperheuristics for the MCTS.**
 
 
 This project proposes several local searches and an MCTS algorithm for the weighted vertex coloring problem (WVCP).
